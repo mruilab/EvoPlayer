@@ -20,12 +20,13 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         checkPermissions()
 
+        mPlayer = EvoPlayer()
         val textView: TextView = findViewById(R.id.ffmpeg_version_text)
         textView.movementMethod = ScrollingMovementMethod.getInstance()
-        textView.text = EvoPlayer.getFFmpegVersion()
+        textView.text = mPlayer.getFFmpegVersion()
 
         mSurfaceView = findViewById(R.id.surface_view)
-        mPlayer = EvoPlayer()
+
     }
 
     fun onPlayClick(view: View) {

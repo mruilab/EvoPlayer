@@ -50,7 +50,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
  * @param cls
  * @return
  */
-jstring get_ffmpeg_version(JNIEnv *env, jclass cls) {
+jstring get_ffmpeg_version(JNIEnv *env, jobject obj) {
     char strBuffer[1024 * 4] = {0};
     strcat(strBuffer, "libavcodec : ");
     strcat(strBuffer, AV_STRINGIFY(LIBAVCODEC_VERSION));
