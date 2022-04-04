@@ -77,7 +77,7 @@ void BaseDecoder::InitFFMpegDecoder(JNIEnv *env) {
     //4、查找编解码器
     //4.1 获取音视频流的索引
     int streamIndex = -1; // 存放音视频流的索引
-    for (int i = 0; i < m_format_ctx->nb_streams; i++) {
+    for (int i = 0; i < m_format_ctx->nb_streams; ++i) {
         if (m_format_ctx->streams[i]->codecpar->codec_type == GetMediaType()) {
             streamIndex = i;
             break;
@@ -166,12 +166,12 @@ void BaseDecoder::LoopDecode() {
             } else {
                 m_state = FINISH;
             }
-            CallbackState(m_state);
+            CallbackState(FINISH);
         }
     }
 }
 
-AVFrame *BaseDecoder::DecodeOneFrame() {
+AVFrame* BaseDecoder::DecodeOneFrame() {
     int ret = av_read_frame(m_format_ctx, m_packet);
     while (ret == 0) {
         if (m_packet->stream_index == m_stream_index) {
@@ -241,7 +241,7 @@ void BaseDecoder::ObtainTimeStamp() {
     if (m_frame->pkt_dts != AV_NOPTS_VALUE) {
         m_cur_t_s = m_packet->dts;
     } else if (m_frame->pts != AV_NOPTS_VALUE) {
-        m_cur_t_s = m_packet->pts;
+        m_cur_t_s = m_frame->pts;
     } else {
         m_cur_t_s = 0;
     }

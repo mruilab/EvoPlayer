@@ -33,7 +33,7 @@ void VideoDecoder::InitRender(JNIEnv *env) {
             m_dst_w = width();
         }
         if (m_dst_h == -1) {
-            m_dst_h = height();
+            m_dst_w = height();
         }
         LOG_INFO(TAG, LogSpec(), "dst %d, %d", m_dst_w, m_dst_h);
     } else {
