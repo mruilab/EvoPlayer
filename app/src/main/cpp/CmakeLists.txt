@@ -31,15 +31,15 @@ link_directories(
 
 file(GLOB src-files
         ${CMAKE_SOURCE_DIR}/*.cpp
-        ${CMAKE_SOURCE_DIR}/common/*h
-        ${CMAKE_SOURCE_DIR}/decoder/*cpp
-        ${CMAKE_SOURCE_DIR}/decoder/video/*cpp
+        ${CMAKE_SOURCE_DIR}/common/*.h
+        ${CMAKE_SOURCE_DIR}/decoder/*.cpp
+        ${CMAKE_SOURCE_DIR}/decoder/video/*.cpp
         ${CMAKE_SOURCE_DIR}/jni/*.cpp
         ${CMAKE_SOURCE_DIR}/player/*.cpp
         ${CMAKE_SOURCE_DIR}/player/def_player/*.cpp
-        ${CMAKE_SOURCE_DIR}/render/video/*h
-        ${CMAKE_SOURCE_DIR}/render/video/native_render/*cpp
-        ${CMAKE_SOURCE_DIR}/utils/*.cpp
+        ${CMAKE_SOURCE_DIR}/render/video/*.h
+        ${CMAKE_SOURCE_DIR}/render/video/native_render/*.cpp
+        ${CMAKE_SOURCE_DIR}/utils/*.h
         ${CMAKE_SOURCE_DIR}/utils/*.c)
 
 # Creates and names a library, sets it as either STATIC

@@ -1,11 +1,11 @@
 //
 // Created by mruilab on 2022/3/31.
 //
-#include <string>
+
 #include "evo_player_jni.h"
-#include "native_window_player.h"
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
+#include "native_window_player.h"
 #include "player.h"
 
 extern "C" {
