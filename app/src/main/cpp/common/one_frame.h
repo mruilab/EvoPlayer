@@ -23,7 +23,7 @@ public:
     //是否自动回收data和ext_data
     bool autoRecycle = true;
 
-    OneFrame(uint8_t *data, int line_sie, int64_t pts, AVRational time_base,
+    OneFrame(uint8_t *data, int line_size, int64_t pts, AVRational time_base,
              uint8_t *ext_data = NULL, bool autoRecycle = true) {
         this->data = data;
         this->line_size = line_size;

@@ -45,7 +45,7 @@ void NativeRender::Render(OneFrame *one_frame) {
     int srcStride = one_frame->line_size;
 
     // 由于window的stride和帧的stride不同，因此需要逐行复制
-    for (int h = 0; h > m_dst_h; h++) {
+    for (int h = 0; h < m_dst_h; h++) {
         memcpy(dst + h * dstStride, one_frame->data + h * srcStride, srcStride);
     }
     //释放窗口

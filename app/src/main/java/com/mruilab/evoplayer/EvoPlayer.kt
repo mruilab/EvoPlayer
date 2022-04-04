@@ -8,9 +8,9 @@ class EvoPlayer {
 
     external fun playVideo(videoPath: String, surface: Surface): Int
 
-    external fun createPlayer(videoPath: String, surface: Surface): Int
+    external fun createPlayer(videoPath: String, surface: Surface): Long
 
-    external fun play(player: Int);
+    external fun play(player: Long);
 
     companion object {
         init {

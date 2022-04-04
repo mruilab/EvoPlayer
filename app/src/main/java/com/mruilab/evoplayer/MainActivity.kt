@@ -13,7 +13,7 @@ import pub.devrel.easypermissions.EasyPermissions
 class MainActivity : AppCompatActivity() {
     lateinit var mSurfaceView: SurfaceView
     lateinit var mPlayer: EvoPlayer
-    private var player: Int? = null
+    private var player: Long? = null
 
     private val RC_READ_EXTERNAL_STORAGE = 1000
 
@@ -35,16 +35,13 @@ class MainActivity : AppCompatActivity() {
     private fun initSurfaceView() {
         mSurfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
-//                if (player == null) {
-//                    player = mPlayer.createPlayer("/sdcard/av/video.mp4", holder.surface);
-//                }
+                if (player == null) {
+                    player = mPlayer.createPlayer("/sdcard/av/video.mp4", holder.surface);
+                }
             }
 
             override fun surfaceChanged(
-                holder: SurfaceHolder,
-                format: Int,
-                width: Int,
-                height: Int
+                holder: SurfaceHolder, format: Int, width: Int, height: Int
             ) {
 
             }
@@ -59,10 +56,8 @@ class MainActivity : AppCompatActivity() {
 //        Thread(Runnable {
 //            mPlayer.playVideo("/sdcard/av/video.mp4", mSurfaceView.holder.surface)
 //        }).start()
-        if (player == null) {
-            player = mPlayer.createPlayer("/sdcard/av/video.mp4", mSurfaceView.holder.surface);
-        }
         mPlayer.play(player!!)
+
     }
 
     private fun checkPermissions() {
