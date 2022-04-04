@@ -16,7 +16,7 @@ public:
     virtual void DecodeReady(IDecoder *decoder) = 0;
     virtual void DecodeRunning(IDecoder *decoder) = 0;
     virtual void DecodePause(IDecoder *decoder) = 0;
-    virtual void DecodeOneFrame(IDecoder *decoder, OneFrame *frame) = 0;
+    virtual bool DecodeOneFrame(IDecoder *decoder, OneFrame *frame) = 0;
     virtual void DecodeFinish(IDecoder *decoder)=0;
     virtual void DecodeStop(IDecoder *decoder)=0;
 };

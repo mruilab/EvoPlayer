@@ -6,6 +6,7 @@
 #include "native_window_player.h"
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
+#include "player.h"
 
 extern "C" {
 #include <libavcodec/version.h>
@@ -22,7 +23,9 @@ extern "C" {
  */
 JNINativeMethod methods[] = {
         {"getFFmpegVersion", "()Ljava/lang/String;",                        (void *) get_ffmpeg_version},
-        {"playVideo",        "(Ljava/lang/String;Landroid/view/Surface;)I", (void *) play_video}
+        {"playVideo",        "(Ljava/lang/String;Landroid/view/Surface;)I", (void *) play_video},
+        {"createPlayer",     "(Ljava/lang/String;Landroid/view/Surface;)I", (void *) create_player},
+        {"play",             "(I)V",                                        (void *) play},
 };
 
 jint registerNativeMethod(JNIEnv *env) {
@@ -84,3 +87,12 @@ int play_video(JNIEnv *env, jobject obj, jstring videoPath, jobject surface) {
     return 0;
 }
 
+jint create_player(JNIEnv *env, jobject obj, jstring video_path, jobject surface) {
+    Player *player = new Player(env, video_path, surface);
+    return (uintptr_t) player;
+}
+
+void play(JNIEnv *env, jobject obj, jint player) {
+    Player *p = (Player *) player;
+    p->play();
+}

@@ -16,8 +16,12 @@ include_directories(
         include
         ${CMAKE_SOURCE_DIR}/common
         ${CMAKE_SOURCE_DIR}/decoder
+        ${CMAKE_SOURCE_DIR}/decoder/video
         ${CMAKE_SOURCE_DIR}/jni
         ${CMAKE_SOURCE_DIR}/player
+        ${CMAKE_SOURCE_DIR}/player/def_player
+        ${CMAKE_SOURCE_DIR}/render/video
+        ${CMAKE_SOURCE_DIR}/render/video/native_render
         ${CMAKE_SOURCE_DIR}/utils
 )
 
@@ -27,10 +31,14 @@ link_directories(
 
 file(GLOB src-files
         ${CMAKE_SOURCE_DIR}/*.cpp
-        ${CMAKE_SOURCE_DIR}/common/*cpp
+        ${CMAKE_SOURCE_DIR}/common/*h
         ${CMAKE_SOURCE_DIR}/decoder/*cpp
+        ${CMAKE_SOURCE_DIR}/decoder/video/*cpp
         ${CMAKE_SOURCE_DIR}/jni/*.cpp
         ${CMAKE_SOURCE_DIR}/player/*.cpp
+        ${CMAKE_SOURCE_DIR}/player/def_player/*.cpp
+        ${CMAKE_SOURCE_DIR}/render/video/*h
+        ${CMAKE_SOURCE_DIR}/render/video/native_render/*cpp
         ${CMAKE_SOURCE_DIR}/utils/*.cpp
         ${CMAKE_SOURCE_DIR}/utils/*.c)
 
