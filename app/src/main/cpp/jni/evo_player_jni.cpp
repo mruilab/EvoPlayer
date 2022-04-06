@@ -1,11 +1,12 @@
 //
 // Created by mruilab on 2022/3/31.
 //
-#include <string>
+
 #include "evo_player_jni.h"
-#include "native_window_player.h"
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
+#include "native_window_player.h"
+#include "player.h"
 
 extern "C" {
 #include <libavcodec/version.h>
@@ -22,7 +23,9 @@ extern "C" {
  */
 JNINativeMethod methods[] = {
         {"getFFmpegVersion", "()Ljava/lang/String;",                        (void *) get_ffmpeg_version},
-        {"playVideo",        "(Ljava/lang/String;Landroid/view/Surface;)I", (void *) play_video}
+        {"playVideo",        "(Ljava/lang/String;Landroid/view/Surface;)I", (void *) play_video},
+        {"createPlayer",     "(Ljava/lang/String;Landroid/view/Surface;)J", (void *) create_player},
+        {"play",             "(J)V",                                        (void *) play},
 };
 
 jint registerNativeMethod(JNIEnv *env) {
@@ -50,7 +53,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
  * @param cls
  * @return
  */
-jstring get_ffmpeg_version(JNIEnv *env, jclass cls) {
+jstring get_ffmpeg_version(JNIEnv *env, jobject obj) {
     char strBuffer[1024 * 4] = {0};
     strcat(strBuffer, "libavcodec : ");
     strcat(strBuffer, AV_STRINGIFY(LIBAVCODEC_VERSION));
@@ -84,3 +87,12 @@ int play_video(JNIEnv *env, jobject obj, jstring videoPath, jobject surface) {
     return 0;
 }
 
+long create_player(JNIEnv *env, jobject obj, jstring video_path, jobject surface) {
+    Player *player = new Player(env, video_path, surface);
+    return (uintptr_t) player;
+}
+
+void play(JNIEnv *env, jobject obj, jlong player) {
+    Player *p = (Player *) player;
+    p->play();
+}

@@ -3,6 +3,7 @@ package com.mruilab.evoplayer
 import android.Manifest
 import android.os.Bundle
 import android.text.method.ScrollingMovementMethod
+import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.View
 import android.widget.TextView
@@ -12,6 +13,7 @@ import pub.devrel.easypermissions.EasyPermissions
 class MainActivity : AppCompatActivity() {
     lateinit var mSurfaceView: SurfaceView
     lateinit var mPlayer: EvoPlayer
+    private var player: Long? = null
 
     private val RC_READ_EXTERNAL_STORAGE = 1000
 
@@ -20,18 +22,42 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         checkPermissions()
 
+        mPlayer = EvoPlayer()
         val textView: TextView = findViewById(R.id.ffmpeg_version_text)
         textView.movementMethod = ScrollingMovementMethod.getInstance()
-        textView.text = EvoPlayer.getFFmpegVersion()
+        textView.text = mPlayer.getFFmpegVersion()
 
         mSurfaceView = findViewById(R.id.surface_view)
-        mPlayer = EvoPlayer()
+        initSurfaceView()
+
+    }
+
+    private fun initSurfaceView() {
+        mSurfaceView.holder.addCallback(object : SurfaceHolder.Callback {
+            override fun surfaceCreated(holder: SurfaceHolder) {
+                if (player == null) {
+                    player = mPlayer.createPlayer("/sdcard/av/video.mp4", holder.surface);
+                }
+            }
+
+            override fun surfaceChanged(
+                holder: SurfaceHolder, format: Int, width: Int, height: Int
+            ) {
+
+            }
+
+            override fun surfaceDestroyed(holder: SurfaceHolder) {
+            }
+
+        })
     }
 
     fun onPlayClick(view: View) {
-        Thread(Runnable {
-            mPlayer.playVideo("/sdcard/av/video.mp4", mSurfaceView.holder.surface)
-        }).start()
+//        Thread(Runnable {
+//            mPlayer.playVideo("/sdcard/av/video.mp4", mSurfaceView.holder.surface)
+//        }).start()
+        mPlayer.play(player!!)
+
     }
 
     private fun checkPermissions() {

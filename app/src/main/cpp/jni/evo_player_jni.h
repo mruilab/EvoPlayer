@@ -7,9 +7,14 @@
 
 #include <jni.h>
 
-jstring get_ffmpeg_version(JNIEnv *env,  jclass cls);
+jstring get_ffmpeg_version(JNIEnv *env, jobject obj);
 
 jint play_video(JNIEnv *env, jobject obj,
                 jstring video_path, jobject surface);
+
+jlong create_player(JNIEnv *env, jobject obj,
+                   jstring video_path, jobject surface);
+
+void play(JNIEnv *env, jobject obj, jlong player);
 
 #endif //EVOPLAYER_EVO_PLAYER_JNI_H
