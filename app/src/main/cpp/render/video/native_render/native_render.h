@@ -34,6 +34,8 @@ private:
     // 显示的目标高
     int m_dst_h;
 
+    int frame_id = 0;
+
 public:
     NativeRender(JNIEnv *env, jobject surface);
 

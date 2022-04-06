@@ -37,6 +37,7 @@ void NativeRender::InitRender(JNIEnv *env, int video_width, int video_height, in
 }
 
 void NativeRender::Render(OneFrame *one_frame) {
+    LOGI(TAG, "current render frame id: %d", ++frame_id);
     // 锁定窗口
     ANativeWindow_lock(m_native_window, &m_out_buffer, NULL);
     uint8_t *dst = (uint8_t *) m_out_buffer.bits;
