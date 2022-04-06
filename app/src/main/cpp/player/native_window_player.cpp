@@ -17,7 +17,7 @@ void NativeWindowPlayer::playVideo(const char *input_str, ANativeWindow *nativeW
         int err_code = avformat_open_input(&m_AVFormatContext, input_str, NULL, NULL);
         if (err_code != 0) {
             av_strerror(err_code, buf, 1024);
-            LOGE(TAG, "NativeWindowPlayer: avformat_open_input fail. %s: %d(%s)", input_str,
+            LOGE(TAG, "avformat_open_input fail. %s: %d(%s)", input_str,
                  err_code,
                  buf);
             break;
@@ -25,7 +25,7 @@ void NativeWindowPlayer::playVideo(const char *input_str, ANativeWindow *nativeW
 
         //3.获取音视频流信息
         if (avformat_find_stream_info(m_AVFormatContext, NULL) < 0) {
-            LOGE(TAG, "NativeWindowPlayer: avformat_find_stream_info fail.");
+            LOGE(TAG, "avformat_find_stream_info fail.");
             break;
         }
 
@@ -38,7 +38,7 @@ void NativeWindowPlayer::playVideo(const char *input_str, ANativeWindow *nativeW
         }
 
         if (m_StreamIndex == -1) {
-            LOGE(TAG, "NativeWindowPlayer: Fail to find stream index.");
+            LOGE(TAG, "Fail to find stream index.");
             break;
         }
 
@@ -48,20 +48,20 @@ void NativeWindowPlayer::playVideo(const char *input_str, ANativeWindow *nativeW
         //6.根据 codec_id 获取解码器
         m_AVCodec = avcodec_find_decoder(codecParameters->codec_id);
         if (m_AVCodec == nullptr) {
-            LOGE(TAG, "NativeWindowPlayer: avcodec_find_decoder fail.");
+            LOGE(TAG, "avcodec_find_decoder fail.");
             break;
         }
 
         //7.创建解码器上下文
         m_AVCodecContext = avcodec_alloc_context3(m_AVCodec);
         if (avcodec_parameters_to_context(m_AVCodecContext, codecParameters) != 0) {
-            LOGE(TAG, "NativeWindowPlayer: avcodec_parameters_to_context fail.");
+            LOGE(TAG, "avcodec_parameters_to_context fail.");
             break;
         }
 
         //8.打开解码器
         if (avcodec_open2(m_AVCodecContext, m_AVCodec, NULL) < 0) {
-            LOGE(TAG, "NativeWindowPlayer: avcodec_open2 fail.");
+            LOGE(TAG, "avcodec_open2 fail.");
             break;
         }
 
@@ -88,7 +88,7 @@ void NativeWindowPlayer::playVideo(const char *input_str, ANativeWindow *nativeW
         if (ANativeWindow_setBuffersGeometry(m_NativeWindow, m_VideoWidth,
                                              m_VideoHeight,
                                              WINDOW_FORMAT_RGBA_8888) < 0) {
-            LOGE(TAG, "NativeWindowPlayer: ANativeWindow_setBuffersGeometry fail.");
+            LOGE(TAG, "ANativeWindow_setBuffersGeometry fail.");
             break;
         }
 
@@ -97,17 +97,17 @@ void NativeWindowPlayer::playVideo(const char *input_str, ANativeWindow *nativeW
             if (m_AVPacket->stream_index == m_StreamIndex) {
                 startDecodeTime = GetCurMsTime();
                 if (avcodec_send_packet(m_AVCodecContext, m_AVPacket) != 0) {//解码视频
-                    LOGE(TAG, "NativeWindowPlayer: avcodec_send_packet fail.");
+                    LOGE(TAG, "avcodec_send_packet fail.");
                     break;
                 }
-                LOGD(TAG, "NativeWindowPlayer: decode frame time: %ldms",
+                LOGD(TAG, "decode frame time: %ldms",
                      GetCurMsTime() - startDecodeTime);
                 while (avcodec_receive_frame(m_AVCodecContext, m_AVFrame) == 0) {
                     // 获取到m_AVFrame解码数据，在这里进行格式转换，然后进行渲染
                     sws_scale(m_SwsContext, m_AVFrame->data, m_AVFrame->linesize, 0,
                               m_VideoHeight, m_RGBFrame->data, m_RGBFrame->linesize);
                     if (ANativeWindow_lock(m_NativeWindow, &m_NativeWindowBuffer, nullptr) < 0) {
-                        LOGE(TAG, "NativeWindowPlayer: ANativeWindow_lock fail.");
+                        LOGE(TAG, "ANativeWindow_lock fail.");
                         break;
                     } else {
                         uint8_t *dstBuffer = static_cast<uint8_t *>(m_NativeWindowBuffer.bits);
