@@ -9,6 +9,8 @@
 
 jstring get_ffmpeg_version(JNIEnv *env, jobject obj);
 
+void get_codec_support(JNIEnv *env, jobject obj);
+
 jint play_video(JNIEnv *env, jobject obj,
                 jstring video_path, jobject surface);
 

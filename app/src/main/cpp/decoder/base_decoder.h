@@ -72,7 +72,7 @@ private:
     // 为合成器提供解码
     bool m_for_synthesizer = false;
     // 开始解码的时间戳，用于计算解码耗时
-    int64_t startDecodeTime;
+    int64_t start_decode_time;
 
     /***************************私有方法***************************/
     /**

@@ -175,7 +175,7 @@ AVFrame *BaseDecoder::DecodeOneFrame() {
     int ret = av_read_frame(m_format_ctx, m_packet);
     while (ret == 0) {
         if (m_packet->stream_index == m_stream_index) {
-            startDecodeTime = GetCurMsTime();
+            start_decode_time = GetCurMsTime();
             switch (avcodec_send_packet(m_codec_ctx, m_packet)) {
                 case AVERROR_EOF:
                     av_packet_unref(m_packet);
@@ -194,7 +194,7 @@ AVFrame *BaseDecoder::DecodeOneFrame() {
                     break;
             }
             LOG_INFO(TAG, LogSpec(), "decode frame time: %ldms",
-                     GetCurMsTime() - startDecodeTime)
+                     GetCurMsTime() - start_decode_time)
             //TODO 这里需要考虑一个packet有可能包含多个frame的情况
             int result = avcodec_receive_frame(m_codec_ctx, m_frame);
             if (result == 0) {
