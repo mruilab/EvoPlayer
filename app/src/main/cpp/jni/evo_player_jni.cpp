@@ -12,6 +12,7 @@
 extern "C" {
 #include <libavcodec/version.h>
 #include <libavcodec/avcodec.h>
+#include <libavcodec/jni.h>
 #include <libavformat/version.h>
 #include <libavutil/version.h>
 #include <libavfilter/version.h>
@@ -46,6 +47,8 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     if (registerNativeMethod(env) != JNI_OK) {
         return -1;
     }
+    // 将 JavaVM 设置给 FFmpeg
+    av_jni_set_java_vm(vm, 0);
     return JNI_VERSION_1_6;
 }
 
