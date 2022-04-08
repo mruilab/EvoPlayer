@@ -22,6 +22,8 @@ class NativeWindowPlayer {
 public:
     void playVideo(const char *input_str, ANativeWindow *nativeWindow);
 
+    void renderFrame();
+
 private:
     //封装格式上下文
     AVFormatContext *m_AVFormatContext = nullptr;

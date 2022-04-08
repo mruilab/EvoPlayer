@@ -7,10 +7,12 @@
 #include <android/native_window_jni.h>
 #include "native_window_player.h"
 #include "player.h"
+#include "logger.h"
 
 extern "C" {
 #include <libavcodec/version.h>
 #include <libavcodec/avcodec.h>
+#include <libavcodec/jni.h>
 #include <libavformat/version.h>
 #include <libavutil/version.h>
 #include <libavfilter/version.h>
@@ -23,6 +25,7 @@ extern "C" {
  */
 JNINativeMethod methods[] = {
         {"getFFmpegVersion", "()Ljava/lang/String;",                        (void *) get_ffmpeg_version},
+        {"getCodecSupport",  "()V",                                         (void *) get_codec_support},
         {"playVideo",        "(Ljava/lang/String;Landroid/view/Surface;)I", (void *) play_video},
         {"createPlayer",     "(Ljava/lang/String;Landroid/view/Surface;)J", (void *) create_player},
         {"play",             "(J)V",                                        (void *) play},
@@ -44,15 +47,11 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     if (registerNativeMethod(env) != JNI_OK) {
         return -1;
     }
+    // 将 JavaVM 设置给 FFmpeg
+    av_jni_set_java_vm(vm, 0);
     return JNI_VERSION_1_6;
 }
 
-/**
- * getFFmpegVersion是静态方法，这样需要使用jclass
- * @param env
- * @param cls
- * @return
- */
 jstring get_ffmpeg_version(JNIEnv *env, jobject obj) {
     char strBuffer[1024 * 4] = {0};
     strcat(strBuffer, "libavcodec : ");
@@ -72,6 +71,38 @@ jstring get_ffmpeg_version(JNIEnv *env, jobject obj) {
     strcat(strBuffer, "\navcodec_license : ");
     strcat(strBuffer, avcodec_license());
     return env->NewStringUTF(strBuffer);
+}
+
+/**
+ * 打印 AVCodec 支持的格式列表
+ * @param env
+ * @param obj
+ */
+void get_codec_support(JNIEnv *env, jobject obj) {
+    char info[1024] = {0};
+    AVCodec *c_temp = av_codec_next(NULL);
+    while (c_temp != NULL) {
+        if (c_temp->decode != NULL) {
+            strcat(info, "[Dec]");
+        } else {
+            strcat(info, "[Enc]");
+        }
+
+        switch (c_temp->type) {
+            case AVMEDIA_TYPE_VIDEO:
+                strcat(info, "[Video]");
+                break;
+            case AVMEDIA_TYPE_AUDIO:
+                strcat(info, "[Audio]");
+                break;
+            default:
+                strcat(info, "[Other]");
+                break;
+        }
+        LOGI("Codec Support", "%s %10s\n", info, c_temp->name);
+        c_temp = c_temp->next;
+        memset(info, 0, 1024);
+    }
 }
 
 int play_video(JNIEnv *env, jobject obj, jstring videoPath, jobject surface) {

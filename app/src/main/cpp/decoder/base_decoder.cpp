@@ -76,14 +76,9 @@ void BaseDecoder::InitFFMpegDecoder(JNIEnv *env) {
 
     //4、查找编解码器
     //4.1 获取音视频流的索引
-    int streamIndex = -1; // 存放音视频流的索引
-    for (int i = 0; i < m_format_ctx->nb_streams; ++i) {
-        if (m_format_ctx->streams[i]->codecpar->codec_type == GetMediaType()) {
-            streamIndex = i;
-            break;
-        }
-    }
-    if (streamIndex == -1) {
+    int streamIndex = av_find_best_stream(m_format_ctx, GetMediaType(),
+                                          -1, -1, NULL, 0); // 存放音视频流的索引
+    if (streamIndex < 0) {
         LOG_ERROR(TAG, LogSpec(), "Fail to find stream index")
         DoneDecode(env);
         return;
@@ -94,8 +89,18 @@ void BaseDecoder::InitFFMpegDecoder(JNIEnv *env) {
     AVCodecParameters *codecPar = m_format_ctx->streams[streamIndex]->codecpar;
 
     //4.3 获取解码器
-//    m_codec = avcodec_find_decoder_by_name("h264_mediacodec"); //硬解码
-    m_codec = avcodec_find_decoder(codecPar->codec_id);
+    if (codecPar->codec_id == AV_CODEC_ID_H264) {
+        m_codec = avcodec_find_decoder_by_name("h264_mediacodec");
+    } else if (codecPar->codec_id == AV_CODEC_ID_HEVC) {
+        m_codec = avcodec_find_decoder_by_name("hevc_mediacodec");
+    }
+//    m_codec = avcodec_find_decoder(codecPar->codec_id);
+
+    if (m_codec == NULL) {
+        LOG_ERROR(TAG, LogSpec(), "codec not found.")
+        DoneDecode(env);
+        return;
+    }
 
     //4.4 获取解码器上下文
     m_codec_ctx = avcodec_alloc_context3(m_codec);
@@ -172,16 +177,17 @@ void BaseDecoder::LoopDecode() {
 }
 
 AVFrame *BaseDecoder::DecodeOneFrame() {
-    int ret = av_read_frame(m_format_ctx, m_packet);
+    int ret = hw_read_packet ? av_read_frame(m_format_ctx, m_packet) : 0;
     while (ret == 0) {
         if (m_packet->stream_index == m_stream_index) {
-            startDecodeTime = GetCurMsTime();
+            start_decode_time = GetCurMsTime();
             switch (avcodec_send_packet(m_codec_ctx, m_packet)) {
                 case AVERROR_EOF:
                     av_packet_unref(m_packet);
                     LOG_ERROR(TAG, LogSpec(), "Decode error: %s", av_err2str(AVERROR_EOF));
                     return NULL; // 解码结束
                 case AVERROR(EAGAIN):
+                    hw_read_packet = false;
                     LOG_ERROR(TAG, LogSpec(), "Decode error: %s", av_err2str(AVERROR(EAGAIN)));
                     break;
                 case AVERROR(EINVAL):
@@ -191,27 +197,24 @@ AVFrame *BaseDecoder::DecodeOneFrame() {
                     LOG_ERROR(TAG, LogSpec(), "Decode error: %s", av_err2str(AVERROR(ENOMEM)));
                     break;
                 default:
+                    hw_read_packet = true;
                     break;
             }
             LOG_INFO(TAG, LogSpec(), "decode frame time: %ldms",
-                     GetCurMsTime() - startDecodeTime)
-            //TODO 这里需要考虑一个packet有可能包含多个frame的情况
-            int result = avcodec_receive_frame(m_codec_ctx, m_frame);
-            if (result == 0) {
+                     GetCurMsTime() - start_decode_time)
+            while (avcodec_receive_frame(m_codec_ctx, m_frame) == 0) {
                 ObtainTimeStamp();
-                av_packet_unref(m_packet);
                 return m_frame;
-            } else {
-                LOG_INFO(TAG, LogSpec(), "Receive frame error result: %s",
-                         av_err2str(AVERROR(result)))
             }
         }
-        // 释放packet
-        av_packet_unref(m_packet);
-        ret = av_read_frame(m_format_ctx, m_packet);
+        if (hw_read_packet) {
+            // 释放packet
+            av_packet_unref(m_packet);
+            ret = av_read_frame(m_format_ctx, m_packet);
+        }
     }
     av_packet_unref(m_packet);
-    LOGI(TAG, "ret = %s", av_err2str(AVERROR(ret)))
+    LOGI(TAG, "ret = %s", av_err2str(ret))
     return NULL;
 }
 

@@ -27,6 +27,8 @@ class MainActivity : AppCompatActivity() {
         textView.movementMethod = ScrollingMovementMethod.getInstance()
         textView.text = mPlayer.getFFmpegVersion()
 
+        mPlayer.getCodecSupport()
+
         mSurfaceView = findViewById(R.id.surface_view)
         initSurfaceView()
 

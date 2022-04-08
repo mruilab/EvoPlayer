@@ -5,6 +5,7 @@
 #include "native_window_player.h"
 #include "logger.h"
 #include "timer.h"
+#include <unistd.h>
 
 void NativeWindowPlayer::playVideo(const char *input_str, ANativeWindow *nativeWindow) {
     do {
@@ -46,7 +47,8 @@ void NativeWindowPlayer::playVideo(const char *input_str, ANativeWindow *nativeW
         AVCodecParameters *codecParameters = m_AVFormatContext->streams[m_StreamIndex]->codecpar;
 
         //6.根据 codec_id 获取解码器
-        m_AVCodec = avcodec_find_decoder(codecParameters->codec_id);
+//        m_AVCodec = avcodec_find_decoder(codecParameters->codec_id);
+        m_AVCodec = avcodec_find_decoder_by_name("h264_mediacodec"); //硬解码
         if (m_AVCodec == nullptr) {
             LOGE(TAG, "avcodec_find_decoder fail.");
             break;
@@ -93,36 +95,37 @@ void NativeWindowPlayer::playVideo(const char *input_str, ANativeWindow *nativeW
         }
 
         //10.解码循环
-        while (av_read_frame(m_AVFormatContext, m_AVPacket) >= 0) { //读取帧
-            if (m_AVPacket->stream_index == m_StreamIndex) {
-                startDecodeTime = GetCurMsTime();
-                if (avcodec_send_packet(m_AVCodecContext, m_AVPacket) != 0) {//解码视频
-                    LOGE(TAG, "avcodec_send_packet fail.");
+        bool read_packet = true;
+        while (true) {
+            if (read_packet) {
+                if (av_read_frame(m_AVFormatContext, m_AVPacket) < 0) {
                     break;
                 }
+            }
+            if (m_AVPacket->stream_index == m_StreamIndex) {
+                startDecodeTime = GetCurMsTime();
+                int ret = avcodec_send_packet(m_AVCodecContext, m_AVPacket);
                 LOGD(TAG, "decode frame time: %ldms",
                      GetCurMsTime() - startDecodeTime);
-                while (avcodec_receive_frame(m_AVCodecContext, m_AVFrame) == 0) {
-                    // 获取到m_AVFrame解码数据，在这里进行格式转换，然后进行渲染
-                    sws_scale(m_SwsContext, m_AVFrame->data, m_AVFrame->linesize, 0,
-                              m_VideoHeight, m_RGBFrame->data, m_RGBFrame->linesize);
-                    if (ANativeWindow_lock(m_NativeWindow, &m_NativeWindowBuffer, nullptr) < 0) {
-                        LOGE(TAG, "ANativeWindow_lock fail.");
-                        break;
-                    } else {
-                        uint8_t *dstBuffer = static_cast<uint8_t *>(m_NativeWindowBuffer.bits);
-                        int srcLineSize = m_RGBFrame->linesize[0];//输入图的步长(一行像素有多少字节)
-                        int dstLineSize = m_NativeWindowBuffer.stride * 4;//RGBA 缓冲区步长
-                        for (int i = 0; i < m_VideoHeight; ++i) {
-                            //一行一行地拷贝图像数据
-                            memcpy(dstBuffer + i * dstLineSize, m_FrameBuffer + i * srcLineSize,
-                                   srcLineSize);
-                        }
-                        ANativeWindow_unlockAndPost(m_NativeWindow);
-                    }
+                if (ret == AVERROR(EAGAIN)) {
+                    LOGE(TAG, "avcodec_send_packet error: %d(%s)", ret,
+                         av_err2str(ret))
+                    read_packet = false;
+                    usleep(30000);
+                    renderFrame();
+                } else if (ret < 0) {
+                    LOGE(TAG, "avcodec_send_packet fail: %d(%s)", ret,
+                         av_err2str(ret))
+                    break;
+                } else {
+                    renderFrame();
+                    read_packet = true;
+                    av_packet_unref(m_AVPacket);
                 }
+            } else {
+                read_packet = true;
+                av_packet_unref(m_AVPacket);
             }
-            av_packet_unref(m_AVPacket); //释放m_AVPacket引用，防止内存泄露
         }
     } while (false);
 
@@ -167,4 +170,26 @@ void NativeWindowPlayer::playVideo(const char *input_str, ANativeWindow *nativeW
 
     if (m_NativeWindow != nullptr)
         ANativeWindow_release(m_NativeWindow);
+}
+
+void NativeWindowPlayer::renderFrame() {
+    while (avcodec_receive_frame(m_AVCodecContext, m_AVFrame) == 0) {
+        // 获取到m_AVFrame解码数据，在这里进行格式转换，然后进行渲染
+        sws_scale(m_SwsContext, m_AVFrame->data, m_AVFrame->linesize, 0,
+                  m_VideoHeight, m_RGBFrame->data, m_RGBFrame->linesize);
+        if (ANativeWindow_lock(m_NativeWindow, &m_NativeWindowBuffer, nullptr) < 0) {
+            LOGE(TAG, "ANativeWindow_lock fail.");
+            break;
+        } else {
+            uint8_t *dstBuffer = static_cast<uint8_t *>(m_NativeWindowBuffer.bits);
+            int srcLineSize = m_RGBFrame->linesize[0];//输入图的步长(一行像素有多少字节)
+            int dstLineSize = m_NativeWindowBuffer.stride * 4;//RGBA 缓冲区步长
+            for (int i = 0; i < m_VideoHeight; ++i) {
+                //一行一行地拷贝图像数据
+                memcpy(dstBuffer + i * dstLineSize, m_FrameBuffer + i * srcLineSize,
+                       srcLineSize);
+            }
+            ANativeWindow_unlockAndPost(m_NativeWindow);
+        }
+    }
 }
