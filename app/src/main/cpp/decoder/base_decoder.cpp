@@ -89,7 +89,11 @@ void BaseDecoder::InitFFMpegDecoder(JNIEnv *env) {
     AVCodecParameters *codecPar = m_format_ctx->streams[streamIndex]->codecpar;
 
     //4.3 获取解码器
-    m_codec = avcodec_find_decoder_by_name("h264_mediacodec"); //硬解码
+    if (codecPar->codec_id == AV_CODEC_ID_H264) {
+        m_codec = avcodec_find_decoder_by_name("h264_mediacodec");
+    } else if (codecPar->codec_id == AV_CODEC_ID_HEVC) {
+        m_codec = avcodec_find_decoder_by_name("hevc_mediacodec");
+    }
 //    m_codec = avcodec_find_decoder(codecPar->codec_id);
 
     if (m_codec == NULL) {
@@ -198,16 +202,9 @@ AVFrame *BaseDecoder::DecodeOneFrame() {
             }
             LOG_INFO(TAG, LogSpec(), "decode frame time: %ldms",
                      GetCurMsTime() - start_decode_time)
-            //TODO 这里需要考虑一个packet有可能包含多个frame的情况
-            int result = avcodec_receive_frame(m_codec_ctx, m_frame);
-            if (result == 0) {
+            while (avcodec_receive_frame(m_codec_ctx, m_frame) == 0) {
                 ObtainTimeStamp();
-                if (hw_read_packet)
-                    av_packet_unref(m_packet);
                 return m_frame;
-            } else {
-                LOG_ERROR(TAG, LogSpec(), "Receive frame error result: %s",
-                          av_err2str(result))
             }
         }
         if (hw_read_packet) {
