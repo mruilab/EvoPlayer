@@ -73,6 +73,8 @@ private:
     bool m_for_synthesizer = false;
     // 开始解码的时间戳，用于计算解码耗时
     int64_t start_decode_time;
+    //控制硬解时av_read_frame的调用
+    bool hw_read_packet = true;
 
     /***************************私有方法***************************/
     /**

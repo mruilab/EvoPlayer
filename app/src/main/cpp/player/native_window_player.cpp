@@ -119,8 +119,8 @@ void NativeWindowPlayer::playVideo(const char *input_str, ANativeWindow *nativeW
                     break;
                 } else {
                     renderFrame();
-                    av_packet_unref(m_AVPacket);
                     read_packet = true;
+                    av_packet_unref(m_AVPacket);
                 }
             } else {
                 read_packet = true;
