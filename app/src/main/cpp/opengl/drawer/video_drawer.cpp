@@ -47,7 +47,7 @@ static GLbyte fShaderStr[] =
         "varying vec2 vCoordinate;\n"
         "void main() {\n"
         "  vec4 color = texture2D(uTexture, vCoordinate);\n"
-        "  color.a = 1.0f;"
+        "  color.a = 1.0;\n"
         "  gl_FragColor = color;\n"
         //        "  float gray = (color.r + color.g + color.b)/3.0;\n"
         //        "  gl_FragColor = vec4(gray, gray, gray, 1.0);\n"
