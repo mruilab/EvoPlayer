@@ -7,6 +7,7 @@
 #include <android/native_window_jni.h>
 #include "native_window_player.h"
 #include "player.h"
+#include "gl_player.h"
 #include "logger.h"
 
 extern "C" {
@@ -29,6 +30,9 @@ JNINativeMethod methods[] = {
         {"playVideo",        "(Ljava/lang/String;Landroid/view/Surface;)I", (void *) play_video},
         {"createPlayer",     "(Ljava/lang/String;Landroid/view/Surface;)J", (void *) create_player},
         {"play",             "(J)V",                                        (void *) play},
+        {"createGLPlayer",   "(Ljava/lang/String;Landroid/view/Surface;)J", (void *) create_gl_player},
+        {"playOrPause",      "(J)V",                                        (void *) play_or_pause},
+        {"stop",             "(J)V",                                        (void *) stop},
 };
 
 jint registerNativeMethod(JNIEnv *env) {
@@ -127,3 +131,21 @@ void play(JNIEnv *env, jobject obj, jlong player) {
     Player *p = (Player *) player;
     p->play();
 }
+
+long create_gl_player(JNIEnv *env, jobject obj, jstring video_path, jobject surface) {
+    GLPlayer *player = new GLPlayer(env, video_path);
+    player->SetSurface(surface);
+    return (uintptr_t) player;
+}
+
+void play_or_pause(JNIEnv *env, jobject obj, jlong player) {
+    GLPlayer *p = (GLPlayer *) player;
+    p->PlayOrPause();
+}
+
+void stop(JNIEnv *env, jobject obj, jlong player) {
+    GLPlayer *p = (GLPlayer *) player;
+    p->Release();
+}
+
+

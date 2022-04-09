@@ -14,6 +14,12 @@ class EvoPlayer {
 
     external fun play(player: Long);
 
+    external fun createGLPlayer(videoPath: String, surface: Surface): Long
+
+    external fun playOrPause(player: Long);
+
+    external fun stop(player: Long);
+
     companion object {
         init {
             System.loadLibrary("evo-lib")

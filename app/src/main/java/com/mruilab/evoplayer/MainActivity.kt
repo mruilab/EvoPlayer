@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
         mSurfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
                 if (player == null) {
-                    player = mPlayer.createPlayer("/sdcard/av/video.mp4", holder.surface);
+                    player = mPlayer.createGLPlayer("/sdcard/av/video.mp4", holder.surface);
                 }
             }
 
@@ -49,6 +49,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun surfaceDestroyed(holder: SurfaceHolder) {
+                mPlayer.stop(player!!)
             }
 
         })
@@ -58,7 +59,7 @@ class MainActivity : AppCompatActivity() {
 //        Thread(Runnable {
 //            mPlayer.playVideo("/sdcard/av/video.mp4", mSurfaceView.holder.surface)
 //        }).start()
-        mPlayer.play(player!!)
+        mPlayer.playOrPause(player!!)
 
     }
 
