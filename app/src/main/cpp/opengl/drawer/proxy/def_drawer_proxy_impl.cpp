@@ -4,10 +4,15 @@
 //
 
 #include "def_drawer_proxy_impl.h"
-#include "logger.h"
 
 void DefDrawerProxyImpl::AddDrawer(Drawer *drawer) {
     m_drawers.push_back(drawer);
+}
+
+void DefDrawerProxyImpl::SetDisplaySize(int width, int height) {
+    for (int i = 0; i < m_drawers.size(); ++i) {
+        m_drawers[i]->SetDisplaySize(width, height);
+    }
 }
 
 void DefDrawerProxyImpl::Draw() {

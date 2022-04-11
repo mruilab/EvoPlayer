@@ -11,6 +11,8 @@ class DrawerProxy {
 public:
     virtual void AddDrawer(Drawer *drawer) = 0;
 
+    virtual void SetDisplaySize(int width, int height) = 0;
+
     virtual void Draw() = 0;
 
     virtual void Release() = 0;

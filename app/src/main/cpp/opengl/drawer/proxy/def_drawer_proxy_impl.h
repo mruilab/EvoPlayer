@@ -16,6 +16,8 @@ private:
 public:
     void AddDrawer(Drawer *drawer);
 
+    void SetDisplaySize(int width, int height) override;
+
     void Draw() override;
 
     void Release() override;

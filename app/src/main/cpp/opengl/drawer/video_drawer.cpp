@@ -13,7 +13,7 @@ VideoDrawer::~VideoDrawer() {
 }
 
 void VideoDrawer::InitRender(JNIEnv *env, int video_width, int video_height, int *dst_size) {
-    SetSize(video_width, video_height);
+    SetVideoSize(video_width, video_height);
     dst_size[0] = video_width;
     dst_size[1] = video_height;
 }
@@ -28,12 +28,11 @@ void VideoDrawer::ReleaseRender() {
 
 static GLbyte vShaderStr[] =
         "attribute vec4 aPosition;\n"
-        //        "uniform mat4 uMatrix;\n"
+        "uniform mat4 uMatrix;\n"
         "attribute vec2 aCoordinate;\n"
         "varying vec2 vCoordinate;\n"
         "void main() {\n"
-        //        "  gl_Position = uMatrix*aPosition;\n"
-        "  gl_Position = aPosition;\n"
+        "  gl_Position = uMatrix*aPosition;\n"
         "  vCoordinate = aCoordinate;\n"
         "}";
 

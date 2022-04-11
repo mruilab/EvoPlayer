@@ -5,6 +5,9 @@
 #ifndef EVOPLAYER_DRAWER_H
 #define EVOPLAYER_DRAWER_H
 
+#include <glm.hpp>
+#include <gtc/type_ptr.hpp>
+
 extern "C" {
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
@@ -36,6 +39,10 @@ private:
             1.0f, 0.0f
     };
 
+    glm::mat4 m_transform = glm::mat4(1.0f);
+
+    float *m_matrix = NULL;
+
     GLuint m_program_id = 0;
 
     GLuint m_texture_id = 0;
@@ -52,7 +59,13 @@ private:
 
     int m_origin_height = 0;
 
+    int m_display_width = 0;
+
+    int m_display_height = 0;
+
     void CreateTextureId();
+
+    void InitDefMatrix();
 
     void CreateProgram();
 
@@ -66,6 +79,8 @@ public:
     virtual ~Drawer();
 
     void Draw();
+
+    void SetDisplaySize(int width, int height);
 
     int origin_width() {
         return m_origin_width;
@@ -86,7 +101,7 @@ protected:
     // 自定义用户数据，可用于存放画面数据
     void *cst_data = NULL;
 
-    void SetSize(int width, int height);
+    void SetVideoSize(int width, int height);
 
     void ActivateTexture(GLenum type = GL_TEXTURE_2D, GLuint texture = -1,
                          GLenum index = 0, int texture_handler = -1);

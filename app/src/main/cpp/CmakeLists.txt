@@ -14,6 +14,7 @@ set(libname evo-lib)
 
 include_directories(
         include
+        glm
         ${CMAKE_SOURCE_DIR}/common
         ${CMAKE_SOURCE_DIR}/decoder
         ${CMAKE_SOURCE_DIR}/decoder/video

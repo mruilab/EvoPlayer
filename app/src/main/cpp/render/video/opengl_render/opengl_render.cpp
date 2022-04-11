@@ -90,6 +90,9 @@ void OpenGLRender::InitDspWindow(JNIEnv *env) {
         ANativeWindow_setBuffersGeometry(m_native_window, m_window_width,
                                          m_window_height, WINDOW_FORMAT_RGBA_8888);
 
+        //将surface的宽高传递给Drawer，用来调整渲染画面大小与比例
+        m_drawer_proxy->SetDisplaySize(m_window_width, m_window_height);
+
         LOGD(TAG, "View Port width: %d, height: %d", m_window_width, m_window_height)
     }
 }

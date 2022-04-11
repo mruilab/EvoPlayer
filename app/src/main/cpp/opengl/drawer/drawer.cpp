@@ -16,14 +16,35 @@ Drawer::~Drawer() {
 
 }
 
-void Drawer::SetSize(int width, int height) {
+void Drawer::SetVideoSize(int width, int height) {
     this->m_origin_width = width;
     this->m_origin_height = height;
+}
+
+void Drawer::SetDisplaySize(int width, int height) {
+    this->m_display_width = width;
+    this->m_display_height = height;
+}
+
+void Drawer::InitDefMatrix() {
+    if (m_matrix != NULL)return;
+    int dstWidth = m_display_width;
+    int dstHeight = dstWidth * m_origin_height / m_origin_width;
+    if (dstHeight > m_display_height) {
+        dstWidth = m_display_height * m_origin_width / m_origin_height;
+        float scale = (float) dstWidth / m_display_width;
+        m_transform = glm::scale(m_transform, glm::vec3(scale, 1, 1));
+    } else {
+        float scale = (float) dstHeight / m_display_height;
+        m_transform = glm::scale(m_transform, glm::vec3(1, scale, 1));
+    }
+    m_matrix = glm::value_ptr(m_transform);
 }
 
 void Drawer::Draw() {
     if (IsReadyToDraw()) {
         CreateTextureId();
+        InitDefMatrix();
         CreateProgram();
         BindTexture();
         PrepareDraw();
@@ -41,7 +62,7 @@ void Drawer::DoDraw() {
     glEnableVertexAttribArray(m_vertex_pos_handler);
     glEnableVertexAttribArray(m_texture_pos_handler);
     //设置着色器参数
-//    glUniformMatrix4fv(m_vertex_matrix_handler, 1, false, m_matrix, 0);
+    glUniformMatrix4fv(m_vertex_matrix_handler, 1, GL_FALSE, m_matrix);
     glVertexAttribPointer(m_vertex_pos_handler, 2, GL_FLOAT, GL_FALSE, 0, m_vertex_coors);
     glVertexAttribPointer(m_texture_pos_handler, 2, GL_FLOAT, GL_FALSE, 0, m_texture_coors);
     //开始绘制
