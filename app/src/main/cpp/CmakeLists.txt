@@ -14,14 +14,20 @@ set(libname evo-lib)
 
 include_directories(
         include
+        glm
         ${CMAKE_SOURCE_DIR}/common
         ${CMAKE_SOURCE_DIR}/decoder
         ${CMAKE_SOURCE_DIR}/decoder/video
         ${CMAKE_SOURCE_DIR}/jni
+        ${CMAKE_SOURCE_DIR}/opengl/drawer
+        ${CMAKE_SOURCE_DIR}/opengl/drawer/proxy
+        ${CMAKE_SOURCE_DIR}/opengl/egl
         ${CMAKE_SOURCE_DIR}/player
         ${CMAKE_SOURCE_DIR}/player/def_player
+        ${CMAKE_SOURCE_DIR}/player/gl_player
         ${CMAKE_SOURCE_DIR}/render/video
         ${CMAKE_SOURCE_DIR}/render/video/native_render
+        ${CMAKE_SOURCE_DIR}/render/video/opengl_render
         ${CMAKE_SOURCE_DIR}/utils
 )
 
@@ -35,11 +41,15 @@ file(GLOB src-files
         ${CMAKE_SOURCE_DIR}/decoder/*.cpp
         ${CMAKE_SOURCE_DIR}/decoder/video/*.cpp
         ${CMAKE_SOURCE_DIR}/jni/*.cpp
+        ${CMAKE_SOURCE_DIR}/opengl/drawer/*.cpp
+        ${CMAKE_SOURCE_DIR}/opengl/drawer/proxy/*.cpp
+        ${CMAKE_SOURCE_DIR}/opengl/egl/*.cpp
         ${CMAKE_SOURCE_DIR}/player/*.cpp
         ${CMAKE_SOURCE_DIR}/player/def_player/*.cpp
+        ${CMAKE_SOURCE_DIR}/player/gl_player/*.cpp
         ${CMAKE_SOURCE_DIR}/render/video/*.h
         ${CMAKE_SOURCE_DIR}/render/video/native_render/*.cpp
-        ${CMAKE_SOURCE_DIR}/utils/*.h
+        ${CMAKE_SOURCE_DIR}/render/video/opengl_render/*.cpp
         ${CMAKE_SOURCE_DIR}/utils/*.c)
 
 # Creates and names a library, sets it as either STATIC
