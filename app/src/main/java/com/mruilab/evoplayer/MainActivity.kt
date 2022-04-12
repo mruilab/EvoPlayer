@@ -15,6 +15,8 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     lateinit var mPlayer: EvoPlayer
     private var player: Long? = null
 
+    private val videoPath = "/sdcard/av/cheerios.mp4"
+
     private var hasPermissions: Boolean = false
     private val RC_READ_EXTERNAL_STORAGE = 1000
 
@@ -39,7 +41,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         mSurfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
                 if (player == null && hasPermissions) {
-                    player = mPlayer.createGLPlayer("/sdcard/av/video.mp4", holder.surface);
+                    player = mPlayer.createGLPlayer(videoPath, holder.surface);
                 }
             }
 
@@ -58,7 +60,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
     fun onPlayClick(view: View) {
 //        Thread(Runnable {
-//            mPlayer.playVideo("/sdcard/av/video.mp4", mSurfaceView.holder.surface)
+//            mPlayer.playVideo(videoPath, mSurfaceView.holder.surface)
 //        }).start()
         if (hasPermissions)
             mPlayer.playOrPause(player!!)
@@ -90,7 +92,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>) {
         if (requestCode == RC_READ_EXTERNAL_STORAGE && player == null) {
             hasPermissions = true
-            player = mPlayer.createGLPlayer("/sdcard/av/video.mp4", mSurfaceView.holder.surface);
+            player = mPlayer.createGLPlayer(videoPath, mSurfaceView.holder.surface);
         }
     }
 
