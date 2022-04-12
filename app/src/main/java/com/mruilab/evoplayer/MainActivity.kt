@@ -10,11 +10,12 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import pub.devrel.easypermissions.EasyPermissions
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     lateinit var mSurfaceView: SurfaceView
     lateinit var mPlayer: EvoPlayer
     private var player: Long? = null
 
+    private var hasPermissions: Boolean = false
     private val RC_READ_EXTERNAL_STORAGE = 1000
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,7 +38,7 @@ class MainActivity : AppCompatActivity() {
     private fun initSurfaceView() {
         mSurfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
-                if (player == null) {
+                if (player == null && hasPermissions) {
                     player = mPlayer.createGLPlayer("/sdcard/av/video.mp4", holder.surface);
                 }
             }
@@ -59,8 +60,8 @@ class MainActivity : AppCompatActivity() {
 //        Thread(Runnable {
 //            mPlayer.playVideo("/sdcard/av/video.mp4", mSurfaceView.holder.surface)
 //        }).start()
-        mPlayer.playOrPause(player!!)
-
+        if (hasPermissions)
+            mPlayer.playOrPause(player!!)
     }
 
     private fun checkPermissions() {
@@ -72,6 +73,8 @@ class MainActivity : AppCompatActivity() {
                 RC_READ_EXTERNAL_STORAGE,
                 *perms
             )
+        } else {
+            hasPermissions = true
         }
     }
 
@@ -82,5 +85,15 @@ class MainActivity : AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this)
+    }
+
+    override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>) {
+        if (requestCode == RC_READ_EXTERNAL_STORAGE && player == null) {
+            hasPermissions = true
+            player = mPlayer.createGLPlayer("/sdcard/av/video.mp4", mSurfaceView.holder.surface);
+        }
+    }
+
+    override fun onPermissionsDenied(requestCode: Int, perms: MutableList<String>) {
     }
 }
