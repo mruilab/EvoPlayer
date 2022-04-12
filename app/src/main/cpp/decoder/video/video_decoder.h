@@ -20,10 +20,13 @@ private:
     //视频数据目标格式
     const AVPixelFormat DST_FORMAT = AV_PIX_FMT_RGBA;
 
-    //存放yuv转换为RGB后的数据
-    AVFrame *m_rgb_frame = NULL;
+    /**
+     * 渲染时用到AVFrame，存放于OneFrame中，
+     * 根据DST_FORMAT将yuv转换为目标数据
+     */
+    AVFrame *m_dst_frame = NULL;
 
-    uint8_t *m_buf_for_rgb_frame = NULL;
+    uint8_t *m_buf_for_dst_frame = NULL;
 
     //视频格式转换器
     SwsContext *m_sws_ctx = NULL;

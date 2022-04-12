@@ -43,14 +43,15 @@ void VideoDecoder::InitRender(JNIEnv *env) {
 }
 
 void VideoDecoder::InitBuffer() {
-    m_rgb_frame = av_frame_alloc();
+    m_dst_frame = av_frame_alloc();
+    m_dst_frame->format = DST_FORMAT;
     // 获取缓存大小
     int numBytes = av_image_get_buffer_size(DST_FORMAT, m_dst_w, m_dst_h, 1);
     // 分配内存
-    m_buf_for_rgb_frame = (uint8_t *) av_malloc(numBytes * sizeof(uint8_t));
+    m_buf_for_dst_frame = (uint8_t *) av_malloc(numBytes * sizeof(uint8_t));
     // 将内存分配给rgbaFrame，并将内存格式化为三个通道后，分别保存其地址
-    av_image_fill_arrays(m_rgb_frame->data, m_rgb_frame->linesize,
-                         m_buf_for_rgb_frame, DST_FORMAT, m_dst_w, m_dst_h, 1);
+    av_image_fill_arrays(m_dst_frame->data, m_dst_frame->linesize,
+                         m_buf_for_dst_frame, DST_FORMAT, m_dst_w, m_dst_h, 1);
 }
 
 void VideoDecoder::InitSws() {
@@ -61,13 +62,16 @@ void VideoDecoder::InitSws() {
 }
 
 void VideoDecoder::Render(AVFrame *frame) {
-    start_sws_time = GetCurMsTime();
-    sws_scale(m_sws_ctx, frame->data, frame->linesize, 0,
-              height(), m_rgb_frame->data, m_rgb_frame->linesize);
-    LOG_INFO(TAG, LogSpec(), "sws_scale frame time: %ldms",
-             GetCurMsTime() - start_sws_time)
-    OneFrame *one_frame = new OneFrame(m_rgb_frame->data[0], m_rgb_frame->linesize[0],
-                                       frame->pts, time_base(), NULL, false);
+    if (frame->format != m_dst_frame->format) {
+        start_sws_time = GetCurMsTime();
+        sws_scale(m_sws_ctx, frame->data, frame->linesize, 0,
+                  height(), m_dst_frame->data, m_dst_frame->linesize);
+        LOG_INFO(TAG, LogSpec(), "sws_scale frame time: %ldms",
+                 GetCurMsTime() - start_sws_time)
+    } else {
+        m_dst_frame = frame;
+    }
+    OneFrame *one_frame = new OneFrame(m_dst_frame, frame->pts, time_base(), NULL, false);
     m_video_render->Render(one_frame);
 
     if (m_state_cb != NULL) {
@@ -83,13 +87,13 @@ bool VideoDecoder::NeedLoopDecode() {
 
 void VideoDecoder::Release() {
     LOG_INFO(TAG, LogSpec(), "[VIDEO] release")
-    if (m_rgb_frame != NULL) {
-        av_frame_free(&m_rgb_frame);
-        m_rgb_frame = NULL;
+    if (m_dst_frame != NULL) {
+        av_frame_free(&m_dst_frame);
+        m_dst_frame = NULL;
     }
-    if (m_buf_for_rgb_frame != NULL) {
-        free(m_buf_for_rgb_frame);
-        m_buf_for_rgb_frame = NULL;
+    if (m_buf_for_dst_frame != NULL) {
+        free(m_buf_for_dst_frame);
+        m_buf_for_dst_frame = NULL;
     }
     if (m_sws_ctx != NULL) {
         sws_freeContext(m_sws_ctx);

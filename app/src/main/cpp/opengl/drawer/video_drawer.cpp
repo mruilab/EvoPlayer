@@ -19,7 +19,8 @@ void VideoDrawer::InitRender(JNIEnv *env, int video_width, int video_height, int
 }
 
 void VideoDrawer::Render(OneFrame *one_frame) {
-    cst_data = one_frame->data;
+    if (one_frame->frame->format == AV_PIX_FMT_RGBA)
+        cst_data = one_frame->frame->data[0];
 }
 
 void VideoDrawer::ReleaseRender() {
