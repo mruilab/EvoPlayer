@@ -3,6 +3,7 @@
 //
 
 #include "video_decoder.h"
+#include "timer.h"
 
 VideoDecoder::VideoDecoder(JNIEnv *env, jstring path, bool for_synthesizer)
         : BaseDecoder(env, path, for_synthesizer) {
@@ -60,8 +61,11 @@ void VideoDecoder::InitSws() {
 }
 
 void VideoDecoder::Render(AVFrame *frame) {
+    start_sws_time = GetCurMsTime();
     sws_scale(m_sws_ctx, frame->data, frame->linesize, 0,
               height(), m_rgb_frame->data, m_rgb_frame->linesize);
+    LOG_INFO(TAG, LogSpec(), "sws_scale frame time: %ldms",
+             GetCurMsTime() - start_sws_time)
     OneFrame *one_frame = new OneFrame(m_rgb_frame->data[0], m_rgb_frame->linesize[0],
                                        frame->pts, time_base(), NULL, false);
     m_video_render->Render(one_frame);

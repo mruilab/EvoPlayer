@@ -36,6 +36,9 @@ private:
     //显示的目标高
     int m_dst_h;
 
+    // 开始转换的时间戳，用于计算sws_scale耗时
+    int64_t start_sws_time;
+
     /**
      * 初始化渲染器
      * @param env
