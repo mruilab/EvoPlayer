@@ -19,12 +19,14 @@ void VideoDrawer::InitRender(JNIEnv *env, int video_width, int video_height, int
 }
 
 void VideoDrawer::Render(OneFrame *one_frame) {
-    if (one_frame->frame->format == AV_PIX_FMT_RGBA)
-        cst_data = one_frame->frame->data[0];
+    m_frame = one_frame->frame;
 }
 
 void VideoDrawer::ReleaseRender() {
-
+    if (m_frame != NULL) {
+        av_frame_free(&m_frame);
+        m_frame = NULL;
+    }
 }
 
 static GLbyte vShaderStr[] =
@@ -66,14 +68,16 @@ void VideoDrawer::BindTexture() {
 }
 
 void VideoDrawer::PrepareDraw() {
-    if (cst_data != NULL) {
-        glTexImage2D(GL_TEXTURE_2D, 0, // level一般为0
-                     GL_RGBA, //纹理内部格式
-                     origin_width(), origin_height(), // 画面宽高
-                     0, // 必须为0
-                     GL_RGBA, // 数据格式，必须和上面的纹理格式保持一直
-                     GL_UNSIGNED_BYTE, // RGBA每位数据的字节数，这里是BYTE​: 1 byte
-                     cst_data);// 画面数据
+    if (m_frame != NULL) {
+        if (m_frame->format == AV_PIX_FMT_RGBA) {
+            glTexImage2D(GL_TEXTURE_2D, 0, // level一般为0
+                         GL_RGBA, //纹理内部格式
+                         origin_width(), origin_height(), // 画面宽高
+                         0, // 必须为0
+                         GL_RGBA, // 数据格式，必须和上面的纹理格式保持一直
+                         GL_UNSIGNED_BYTE, // RGBA每位数据的字节数，这里是BYTE: 1 byte
+                         m_frame->data[0]);// 画面数据
+        }
     }
 }
 

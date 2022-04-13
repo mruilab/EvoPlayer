@@ -10,6 +10,10 @@
 #include "video_render.h"
 
 class VideoDrawer : public Drawer, public VideoRender {
+
+private:
+    AVFrame *m_frame = NULL;
+
 public:
 
     VideoDrawer();
