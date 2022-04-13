@@ -3,17 +3,21 @@ package com.mruilab.evoplayer.beauty;
 import android.Manifest;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.faceunity.wrapper.faceunity;
 import com.mruilab.evoplayer.R;
+import com.mruilab.evoplayer.utils.authpack;
 
 import java.util.List;
 
 import pub.devrel.easypermissions.EasyPermissions;
 
 public class FrontPageActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
+    private static final String TAG = FrontPageActivity.class.getSimpleName();
 
     private boolean hasPermissions = false;
     private static final int RC_READ_EXTERNAL_STORAGE = 1001;
@@ -26,6 +30,8 @@ public class FrontPageActivity extends AppCompatActivity implements EasyPermissi
         setContentView(R.layout.activity_front_page);
         checkPermissions();
 
+        initBeautySDK();
+
         mChooseVideoBtn = findViewById(R.id.choose_video_btn);
 
         mChooseVideoBtn.setOnClickListener(view -> {
@@ -37,6 +43,14 @@ public class FrontPageActivity extends AppCompatActivity implements EasyPermissi
                 startActivity(intent);
             }
         });
+    }
+
+    /**
+     * 初始化美颜SDK
+     */
+    private void initBeautySDK() {
+        int isSetup = faceunity.fuSetup(new byte[0], authpack.A());
+        Log.d(TAG, "fuSetup. isSetup: " + (isSetup == 0 ? "no" : "yes"));
     }
 
     private void checkPermissions() {
