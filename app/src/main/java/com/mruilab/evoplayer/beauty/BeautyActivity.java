@@ -36,6 +36,8 @@ public class BeautyActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_beauty);
 
+        initBeauty();
+
         video_path = getIntent().getStringExtra("path");
         mVideoDecoder = new VideoDecoder();
         mVideoDecoder.setOutputFormat(VideoDecoder.COLOR_FORMAT_I420);
@@ -67,7 +69,7 @@ public class BeautyActivity extends Activity {
 
     private void playVideo() {
         mThread = new Thread(() -> {
-            initBeauty();
+            mFURenderKit.createEGLContext();
             mVideoDecoder.decode(video_path, new VideoDecoder.DecodeCallback() {
                 @Override
                 public void onDecode(byte[] yuv, int width, int height, int frameCount, long presentationTimeUs) {
@@ -81,11 +83,17 @@ public class BeautyActivity extends Activity {
 
                 @Override
                 public void onFinish() {
+                    mFURenderKit.clearCacheResource();
+                    mFURenderKit.releaseEGLContext();
+                    mFURenderKit.releaseSafe();
                     Log.d(TAG, "onFinish");
                 }
 
                 @Override
                 public void onStop() {
+                    mFURenderKit.clearCacheResource();
+                    mFURenderKit.releaseEGLContext();
+                    mFURenderKit.releaseSafe();
                     Log.d(TAG, "onStop");
                 }
             });
@@ -97,21 +105,14 @@ public class BeautyActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        FUAIKit.getInstance().releaseAllAIProcessor();
         if (mVideoDecoder != null) {
             mVideoDecoder.stop();
             mVideoDecoder = null;
         }
-        if (mThread != null) {
-            mThread.interrupt();
-            mThread = null;
-        }
-        FUAIKit.getInstance().releaseAllAIProcessor();
-        mFURenderKit.releaseEGLContext();
-        mFURenderKit.release();
     }
 
     private void initBeauty() {
-        mFURenderKit.createEGLContext();
         FUAIKit.getInstance().loadAIProcessor(DemoConfig.BUNDLE_AI_FACE, FUAITypeEnum.FUAITYPE_FACEPROCESSOR);//加载人脸驱动
         mFURenderKit.setFaceBeauty(FaceBeautySource.getDefaultFaceBeauty());//设置美颜特效
         FUAIKit.getInstance().setMaxFaces(4);//设置最大人脸数
