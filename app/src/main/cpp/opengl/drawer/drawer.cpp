@@ -95,10 +95,10 @@ void Drawer::CreateProgram() {
         //连接到着色器程序
         glLinkProgram(m_program_id);
 
-        m_vertex_matrix_handler = glGetUniformLocation(m_program_id, "uMatrix");
-        m_vertex_pos_handler = glGetAttribLocation(m_program_id, "aPosition");
-        m_texture_handler = glGetUniformLocation(m_program_id, "uTexture");
-        m_texture_pos_handler = glGetAttribLocation(m_program_id, "aCoordinate");
+        m_vertex_matrix_handler = glGetUniformLocation(m_program_id, "u_MVPMatrix");
+        m_vertex_pos_handler = glGetAttribLocation(m_program_id, "a_position");
+        m_texture_pos_handler = glGetAttribLocation(m_program_id, "a_texCoord");
+        m_texture_handler = glGetUniformLocation(m_program_id, "u_texture");
 
         InitCstShaderHandler();
 

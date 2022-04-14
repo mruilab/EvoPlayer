@@ -28,6 +28,9 @@ include_directories(
         ${CMAKE_SOURCE_DIR}/render/video
         ${CMAKE_SOURCE_DIR}/render/video/native_render
         ${CMAKE_SOURCE_DIR}/render/video/opengl_render
+        ${CMAKE_SOURCE_DIR}/shader
+        ${CMAKE_SOURCE_DIR}/shader/fragment
+        ${CMAKE_SOURCE_DIR}/shader/vertex
         ${CMAKE_SOURCE_DIR}/utils
 )
 
@@ -50,6 +53,9 @@ file(GLOB src-files
         ${CMAKE_SOURCE_DIR}/render/video/*.h
         ${CMAKE_SOURCE_DIR}/render/video/native_render/*.cpp
         ${CMAKE_SOURCE_DIR}/render/video/opengl_render/*.cpp
+        ${CMAKE_SOURCE_DIR}/shader/*.h
+        ${CMAKE_SOURCE_DIR}/shader/fragment/*.cpp
+        ${CMAKE_SOURCE_DIR}/shader/vertex/*.cpp
         ${CMAKE_SOURCE_DIR}/utils/*.c)
 
 # Creates and names a library, sets it as either STATIC

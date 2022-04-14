@@ -3,6 +3,7 @@
 //
 
 #include "video_drawer.h"
+#include "shader.h"
 
 VideoDrawer::VideoDrawer() : Drawer(0, 0) {
 
@@ -29,34 +30,12 @@ void VideoDrawer::ReleaseRender() {
     }
 }
 
-static GLbyte vShaderStr[] =
-        "attribute vec4 aPosition;\n"
-        "uniform mat4 uMatrix;\n"
-        "attribute vec2 aCoordinate;\n"
-        "varying vec2 vCoordinate;\n"
-        "void main() {\n"
-        "  gl_Position = uMatrix*aPosition;\n"
-        "  vCoordinate = aCoordinate;\n"
-        "}";
-
 const char *VideoDrawer::GetVertexShader() {
-    return (char *) vShaderStr;
+    return default_vertex_shader();
 }
 
-static GLbyte fShaderStr[] =
-        "precision mediump float;\n"
-        "uniform sampler2D uTexture;\n"
-        "varying vec2 vCoordinate;\n"
-        "void main() {\n"
-        "  vec4 color = texture2D(uTexture, vCoordinate);\n"
-        "  color.a = 1.0;\n"
-        "  gl_FragColor = color;\n"
-        //        "  float gray = (color.r + color.g + color.b)/3.0;\n"
-        //        "  gl_FragColor = vec4(gray, gray, gray, 1.0);\n"
-        "}";
-
 const char *VideoDrawer::GetFragmentShader() {
-    return (char *) fShaderStr;
+    return rgba_fragment_shader();
 }
 
 void VideoDrawer::InitCstShaderHandler() {
