@@ -3,6 +3,7 @@
 //
 
 #include "evo_player_jni.h"
+#include <jni.h>
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
 #include "native_window_player.h"
@@ -19,41 +20,6 @@ extern "C" {
 #include <libavfilter/version.h>
 #include <libswresample/version.h>
 #include <libswscale/version.h>
-}
-
-/**
- * 动态注册
- */
-JNINativeMethod methods[] = {
-        {"getFFmpegVersion", "()Ljava/lang/String;",                        (void *) get_ffmpeg_version},
-        {"getCodecSupport",  "()V",                                         (void *) get_codec_support},
-        {"playVideo",        "(Ljava/lang/String;Landroid/view/Surface;)I", (void *) play_video},
-        {"createPlayer",     "(Ljava/lang/String;Landroid/view/Surface;)J", (void *) create_player},
-        {"play",             "(J)V",                                        (void *) play},
-        {"createGLPlayer",   "(Ljava/lang/String;Landroid/view/Surface;)J", (void *) create_gl_player},
-        {"playOrPause",      "(J)V",                                        (void *) play_or_pause},
-        {"stop",             "(J)V",                                        (void *) stop},
-};
-
-jint registerNativeMethod(JNIEnv *env) {
-    jclass cls = env->FindClass("com/mruilab/evoplayer/EvoPlayer");
-    if (env->RegisterNatives(cls, methods, sizeof(methods) / sizeof(methods[0])) < 0) {
-        return -1;
-    }
-    return 0;
-}
-
-jint JNI_OnLoad(JavaVM *vm, void *reserved) {
-    JNIEnv *env = NULL;
-    if (vm->GetEnv((void **) &env, JNI_VERSION_1_6) != JNI_OK) {
-        return -1;
-    }
-    if (registerNativeMethod(env) != JNI_OK) {
-        return -1;
-    }
-    // 将 JavaVM 设置给 FFmpeg
-    av_jni_set_java_vm(vm, 0);
-    return JNI_VERSION_1_6;
 }
 
 jstring get_ffmpeg_version(JNIEnv *env, jobject obj) {
@@ -146,6 +112,41 @@ void play_or_pause(JNIEnv *env, jobject obj, jlong player) {
 void stop(JNIEnv *env, jobject obj, jlong player) {
     GLPlayer *p = (GLPlayer *) player;
     p->Release();
+}
+
+/**
+ * 动态注册
+ */
+JNINativeMethod methods[] = {
+        {"getFFmpegVersion", "()Ljava/lang/String;",                        (void *) get_ffmpeg_version},
+        {"getCodecSupport",  "()V",                                         (void *) get_codec_support},
+        {"playVideo",        "(Ljava/lang/String;Landroid/view/Surface;)I", (void *) play_video},
+        {"createPlayer",     "(Ljava/lang/String;Landroid/view/Surface;)J", (void *) create_player},
+        {"play",             "(J)V",                                        (void *) play},
+        {"createGLPlayer",   "(Ljava/lang/String;Landroid/view/Surface;)J", (void *) create_gl_player},
+        {"playOrPause",      "(J)V",                                        (void *) play_or_pause},
+        {"stop",             "(J)V",                                        (void *) stop},
+};
+
+jint registerNativeMethod(JNIEnv *env) {
+    jclass cls = env->FindClass("com/mruilab/evoplayer/EvoPlayer");
+    if (env->RegisterNatives(cls, methods, sizeof(methods) / sizeof(methods[0])) < 0) {
+        return -1;
+    }
+    return 0;
+}
+
+jint JNI_OnLoad(JavaVM *vm, void *reserved) {
+    JNIEnv *env = NULL;
+    if (vm->GetEnv((void **) &env, JNI_VERSION_1_6) != JNI_OK) {
+        return -1;
+    }
+    if (registerNativeMethod(env) != JNI_OK) {
+        return -1;
+    }
+    // 将 JavaVM 设置给 FFmpeg
+    av_jni_set_java_vm(vm, 0);
+    return JNI_VERSION_1_6;
 }
 
 
