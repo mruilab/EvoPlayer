@@ -3,11 +3,29 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/choose_video_btn"
+    <LinearLayout
+        android:id="@+id/lyt_select_data_video"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:text="选择视频文件" />
+        android:background="@mipmap/bg_selected_btn"
+        android:gravity="center"
+        android:onClick="onClick"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:scaleType="centerInside"
+            android:src="@mipmap/icon_selected_video" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:text="Video"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+    </LinearLayout>
 
 </RelativeLayout>

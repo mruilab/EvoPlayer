@@ -1,17 +1,22 @@
 package com.mruilab.evoplayer.beauty;
 
 import android.Manifest;
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.media.MediaMetadataRetriever;
+import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
-import android.widget.Button;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.faceunity.wrapper.faceunity;
 import com.mruilab.evoplayer.R;
-import com.mruilab.evoplayer.utils.authpack;
+import com.mruilab.evoplayer.utils.Uri2PathUtil;
 
+import java.io.File;
 import java.util.List;
 
 import pub.devrel.easypermissions.EasyPermissions;
@@ -22,7 +27,22 @@ public class FrontPageActivity extends AppCompatActivity implements EasyPermissi
     private boolean hasPermissions = false;
     private static final int RC_READ_EXTERNAL_STORAGE = 1001;
 
-    private Button mChooseVideoBtn;
+    ActivityResultLauncher<Intent> launcher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        if (result.getResultCode() != Activity.RESULT_OK || result.getData() == null)
+                            return;
+                        Uri uri = result.getData().getData();
+                        if (uri == null) return;
+                        String path = Uri2PathUtil.getRealPathFromUri(FrontPageActivity.this, uri);
+                        if (!checkIsVideo(FrontPageActivity.this, path)) {
+                            Toast.makeText(FrontPageActivity.this, "请选择正确的视频文件", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        Intent intent = new Intent(FrontPageActivity.this, BeautyActivity.class);
+                        intent.putExtra("path", path);
+                        startActivity(intent);
+                    });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,27 +50,16 @@ public class FrontPageActivity extends AppCompatActivity implements EasyPermissi
         setContentView(R.layout.activity_front_page);
         checkPermissions();
 
-        initBeautySDK();
-
-        mChooseVideoBtn = findViewById(R.id.choose_video_btn);
-
-        mChooseVideoBtn.setOnClickListener(view -> {
+        findViewById(R.id.lyt_select_data_video).setOnClickListener(view -> {
             if (!hasPermissions) {
                 checkPermissions();
             } else {
-                //跳转相册去选择文件
-                Intent intent = new Intent(this, BeautyActivity.class);
-                startActivity(intent);
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("video/*");
+                launcher.launch(intent);
             }
         });
-    }
-
-    /**
-     * 初始化美颜SDK
-     */
-    private void initBeautySDK() {
-        int isSetup = faceunity.fuSetup(new byte[0], authpack.A());
-        Log.d(TAG, "fuSetup. isSetup: " + (isSetup == 0 ? "no" : "yes"));
     }
 
     private void checkPermissions() {
@@ -83,5 +92,23 @@ public class FrontPageActivity extends AppCompatActivity implements EasyPermissi
     @Override
     public void onPermissionsDenied(int requestCode, List<String> perms) {
 
+    }
+
+    /**
+     * 校验文件是否是视频
+     *
+     * @param path String
+     * @return Boolean
+     */
+    public static Boolean checkIsVideo(Context context, String path) {
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        try {
+            retriever.setDataSource(context, Uri.fromFile(new File(path)));
+            String hasVideo = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO);
+            return "yes".equals(hasVideo);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }

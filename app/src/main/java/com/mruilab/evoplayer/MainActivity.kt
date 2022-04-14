@@ -52,16 +52,12 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             }
 
             override fun surfaceDestroyed(holder: SurfaceHolder) {
-                mPlayer.stop(player!!)
             }
 
         })
     }
 
     fun onPlayClick(view: View) {
-//        Thread(Runnable {
-//            mPlayer.playVideo(videoPath, mSurfaceView.holder.surface)
-//        }).start()
         if (hasPermissions)
             mPlayer.playOrPause(player!!)
     }
