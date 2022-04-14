@@ -24,7 +24,7 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
             android:text="Video"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/white"
             android:textSize="16sp" />
     </LinearLayout>
 

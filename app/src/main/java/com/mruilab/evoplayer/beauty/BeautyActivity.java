@@ -4,9 +4,11 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.ConfigurationInfo;
+import android.graphics.Color;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.TextView;
 
 import com.faceunity.core.entity.FURenderInputData;
 import com.faceunity.core.entity.FURenderOutputData;
@@ -20,6 +22,8 @@ import com.mruilab.evoplayer.R;
 public class BeautyActivity extends Activity {
     private static final String TAG = BeautyActivity.class.getSimpleName();
 
+    private TextView mFaceNumText;
+
     private Thread mThread;
 
     private VideoDecoder mVideoDecoder;
@@ -30,15 +34,18 @@ public class BeautyActivity extends Activity {
 
     /*渲染控制器*/
     private FURenderKit mFURenderKit = FURenderKit.getInstance();
+    FURenderInputData.FURenderConfig mConfig;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_beauty);
-
         initBeauty();
 
         video_path = getIntent().getStringExtra("path");
+
+        mFaceNumText = findViewById(R.id.text_face_num);
+
         mVideoDecoder = new VideoDecoder();
         mVideoDecoder.setOutputFormat(VideoDecoder.COLOR_FORMAT_I420);
 
@@ -70,6 +77,7 @@ public class BeautyActivity extends Activity {
     private void playVideo() {
         mThread = new Thread(() -> {
             mFURenderKit.createEGLContext();
+            mFURenderKit.setUseTexAsync(true);
             mVideoDecoder.decode(video_path, new VideoDecoder.DecodeCallback() {
                 @Override
                 public void onDecode(byte[] yuv, int width, int height, int frameCount, long presentationTimeUs) {
@@ -77,7 +85,10 @@ public class BeautyActivity extends Activity {
                             "，frameCount: " + frameCount + ", presentationTimeUs: " + presentationTimeUs);
                     int faceNum = FUAIKit.getInstance().trackFace(yuv,
                             FUInputBufferEnum.FU_FORMAT_YUV_BUFFER, width, height);
-                    Log.d(TAG, "Track Face Number:" + faceNum);
+                    runOnUiThread(() -> {
+                        mFaceNumText.setTextColor(faceNum > 0 ? Color.WHITE : Color.RED);
+                        mFaceNumText.setText("Track Face Number: " + faceNum);
+                    });
                     dealWithYuv(yuv, width, height);
                 }
 
@@ -116,21 +127,24 @@ public class BeautyActivity extends Activity {
         FUAIKit.getInstance().loadAIProcessor(DemoConfig.BUNDLE_AI_FACE, FUAITypeEnum.FUAITYPE_FACEPROCESSOR);//加载人脸驱动
         mFURenderKit.setFaceBeauty(FaceBeautySource.getDefaultFaceBeauty());//设置美颜特效
         FUAIKit.getInstance().setMaxFaces(4);//设置最大人脸数
-        Log.d(TAG, "isAIProcessorLoaded:" + FUAIKit.getInstance().isAIProcessorLoaded(FUAITypeEnum.FUAITYPE_FACEPROCESSOR));
+
+        mConfig = new FURenderInputData.FURenderConfig();
+        mConfig.setNeedBufferReturn(true);
+        mConfig.setOutputMatrix(FUTransformMatrixEnum.CCROT0_FLIPVERTICAL);
     }
 
     private void dealWithYuv(byte[] i420, int width, int height) {
+        long startMs = System.currentTimeMillis();
         FURenderInputData inputData = new FURenderInputData(width, height);
         FURenderInputData.FUImageBuffer imageBuffer =
                 new FURenderInputData.FUImageBuffer(FUInputBufferEnum.FU_FORMAT_I420_BUFFER, i420);
-        FURenderInputData.FURenderConfig config = new FURenderInputData.FURenderConfig();
-        config.setNeedBufferReturn(true);
-        config.setOutputMatrix(FUTransformMatrixEnum.CCROT0_FLIPVERTICAL);
-        inputData.setRenderConfig(config);
+
+        inputData.setRenderConfig(mConfig);
         inputData.setImageBuffer(imageBuffer);
 
         FURenderOutputData outputData = mFURenderKit.renderWithInput(inputData);
         byte[] buffer = outputData.getImage().getBuffer();
+        Log.i(TAG, "deal with yuv time:" + (System.currentTimeMillis() - startMs));
         mRender.setYuvData(buffer, width, height);
         mGlSurfaceView.requestRender();
     }
