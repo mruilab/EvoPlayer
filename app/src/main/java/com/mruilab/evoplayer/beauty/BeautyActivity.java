@@ -26,7 +26,7 @@ public class BeautyActivity extends Activity {
     private GLSurfaceView mGlSurfaceView;
     private YuvRender mRender;
 
-    private String video_path = "/sdcard/av/cheerios9.mp4";
+    private String video_path;
 
     /*渲染控制器*/
     private FURenderKit mFURenderKit = FURenderKit.getInstance();
@@ -39,7 +39,7 @@ public class BeautyActivity extends Activity {
         video_path = getIntent().getStringExtra("path");
         mVideoDecoder = new VideoDecoder();
         mVideoDecoder.setOutputFormat(VideoDecoder.COLOR_FORMAT_I420);
-        
+
         if (checkOpenGLES30()) {
             mGlSurfaceView = findViewById(R.id.surface_view);
             mGlSurfaceView.setEGLContextClientVersion(3);
@@ -66,32 +66,29 @@ public class BeautyActivity extends Activity {
     }
 
     private void playVideo() {
-        mThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                initBeauty();
-                mVideoDecoder.decode(video_path, new VideoDecoder.DecodeCallback() {
-                    @Override
-                    public void onDecode(byte[] yuv, int width, int height, int frameCount, long presentationTimeUs) {
-                        Log.d(TAG, "length：" + yuv.length + "，width：" + width + "，height：" + height +
-                                "，frameCount: " + frameCount + ", presentationTimeUs: " + presentationTimeUs);
-                        int faceNum = FUAIKit.getInstance().trackFace(yuv,
-                                FUInputBufferEnum.FU_FORMAT_YUV_BUFFER, width, height);
-                        Log.d(TAG, "Track Face Number:" + faceNum);
-                        dealWithYuv(yuv, width, height);
-                    }
+        mThread = new Thread(() -> {
+            initBeauty();
+            mVideoDecoder.decode(video_path, new VideoDecoder.DecodeCallback() {
+                @Override
+                public void onDecode(byte[] yuv, int width, int height, int frameCount, long presentationTimeUs) {
+                    Log.d(TAG, "length：" + yuv.length + "，width：" + width + "，height：" + height +
+                            "，frameCount: " + frameCount + ", presentationTimeUs: " + presentationTimeUs);
+                    int faceNum = FUAIKit.getInstance().trackFace(yuv,
+                            FUInputBufferEnum.FU_FORMAT_YUV_BUFFER, width, height);
+                    Log.d(TAG, "Track Face Number:" + faceNum);
+                    dealWithYuv(yuv, width, height);
+                }
 
-                    @Override
-                    public void onFinish() {
-                        Log.d(TAG, "onFinish");
-                    }
+                @Override
+                public void onFinish() {
+                    Log.d(TAG, "onFinish");
+                }
 
-                    @Override
-                    public void onStop() {
-                        Log.d(TAG, "onStop");
-                    }
-                });
-            }
+                @Override
+                public void onStop() {
+                    Log.d(TAG, "onStop");
+                }
+            });
         });
 
         mThread.start();
