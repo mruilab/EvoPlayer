@@ -48,7 +48,7 @@ private:
     /**
      * 初始化显示器
      */
-    void InitBuffer();
+    void InitBuffer(AVPixelFormat format);
 
     /**
      * 初始化视频数据转换器

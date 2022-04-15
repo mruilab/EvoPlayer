@@ -20,7 +20,6 @@ void VideoDecoder::SetRender(VideoRender *render) {
 
 void VideoDecoder::Prepare(JNIEnv *env) {
     InitRender(env);
-    InitBuffer();
     InitSws();
 }
 
@@ -43,15 +42,15 @@ void VideoDecoder::InitRender(JNIEnv *env) {
     }
 }
 
-void VideoDecoder::InitBuffer() {
+void VideoDecoder::InitBuffer(AVPixelFormat format) {
     m_dst_frame = av_frame_alloc();
     // 获取缓存大小
-    int numBytes = av_image_get_buffer_size(AV_PIX_FMT_RGBA, m_dst_w, m_dst_h, 1);
+    int numBytes = av_image_get_buffer_size(format, m_dst_w, m_dst_h, 1);
     // 分配内存
     m_buf_for_dst_frame = (uint8_t *) av_malloc(numBytes * sizeof(uint8_t));
     // 将内存分配给dst_frame，并将内存格式化为三个通道后，分别保存其地址
     av_image_fill_arrays(m_dst_frame->data, m_dst_frame->linesize,
-                         m_buf_for_dst_frame, AV_PIX_FMT_RGBA, m_dst_w, m_dst_h, 1);
+                         m_buf_for_dst_frame, format, m_dst_w, m_dst_h, 1);
 }
 
 void VideoDecoder::InitSws() {
@@ -63,10 +62,28 @@ void VideoDecoder::InitSws() {
 
 void VideoDecoder::Render(AVFrame *frame) {
     obtain_dst_frame_time = GetCurMsTime();
+    if (m_dst_frame == NULL) {
+        if (frame->format == AV_PIX_FMT_NV12 ||
+            frame->format == AV_PIX_FMT_NV21)
+            InitBuffer(AV_PIX_FMT_NV12);
+        else if (frame->format == AV_PIX_FMT_YUV420P) {
+            InitBuffer(AV_PIX_FMT_YUV420P);
+        } else {
+            InitBuffer(AV_PIX_FMT_RGBA);
+        }
+    }
     switch (frame->format) {
         case AV_PIX_FMT_YUV420P:
             obtainYUV420p(frame, m_dst_frame);
             m_dst_frame->format = AV_PIX_FMT_YUV420P;
+            break;
+        case AV_PIX_FMT_NV12:
+            obtainNV12(frame, m_dst_frame);
+            m_dst_frame->format = AV_PIX_FMT_NV12;
+            break;
+        case AV_PIX_FMT_NV21:
+            obtainNV12(frame, m_dst_frame);
+            m_dst_frame->format = AV_PIX_FMT_NV21;
             break;
         default:
             sws_scale(m_sws_ctx, frame->data, frame->linesize, 0,
@@ -74,8 +91,9 @@ void VideoDecoder::Render(AVFrame *frame) {
             m_dst_frame->format = AV_PIX_FMT_RGBA;
             break;
     }
-    LOG_INFO(TAG, LogSpec(), "obtain dst_frame time: %ldms",
-             GetCurMsTime() - obtain_dst_frame_time)
+    // YUV420P->0, NV12->23, NV21->24, RGBA->26
+    LOG_INFO(TAG, LogSpec(), "obtain dst_frame time: %ldms, src format: %d, dst format: %d",
+             GetCurMsTime() - obtain_dst_frame_time, frame->format, m_dst_frame->format)
     OneFrame *one_frame = new OneFrame(m_dst_frame, frame->pts, time_base(), NULL, false);
     m_video_render->Render(one_frame);
 
