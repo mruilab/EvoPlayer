@@ -19,4 +19,6 @@ const char *i420_fragment_shader();
 
 const char *nv12_fragment_shader();
 
+const char *nv21_fragment_shader();
+
 #endif //EVOPLAYER_SHADER_H

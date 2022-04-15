@@ -10,14 +10,13 @@ static const char f_shader[] =
                 in vec2 v_texCoord;
                 out vec4 out_color;
                 layout(location = 0) uniform sampler2D y_texture;
-                layout(location = 1) uniform sampler2D u_texture;
-                layout(location = 2) uniform sampler2D v_texture;
+                layout(location = 1) uniform sampler2D uv_texture;
 
                 void main() {
                     vec3 yuv;
                     yuv.x = texture(y_texture, v_texCoord).r;
-                    yuv.y = texture(u_texture, v_texCoord).r - 0.5;
-                    yuv.z = texture(v_texture, v_texCoord).r - 0.5;
+                    yuv.y = texture(uv_texture, v_texCoord).a - 0.5;
+                    yuv.z = texture(uv_texture, v_texCoord).r - 0.5;
 
                     vec3 rgb = mat3(1.0, 1.0, 1.0,
                                     0.0, -0.39465, 2.03211,
@@ -26,7 +25,6 @@ static const char f_shader[] =
                 }
         );
 
-const char *i420_fragment_shader() {
+const char *nv21_fragment_shader() {
     return f_shader;
 }
-

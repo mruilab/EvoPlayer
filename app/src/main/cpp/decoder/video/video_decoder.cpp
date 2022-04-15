@@ -61,7 +61,6 @@ void VideoDecoder::InitSws() {
 }
 
 void VideoDecoder::Render(AVFrame *frame) {
-    obtain_dst_frame_time = GetCurMsTime();
     if (m_dst_frame == NULL) {
         if (frame->format == AV_PIX_FMT_NV12 ||
             frame->format == AV_PIX_FMT_NV21)
@@ -72,17 +71,18 @@ void VideoDecoder::Render(AVFrame *frame) {
             InitBuffer(AV_PIX_FMT_RGBA);
         }
     }
+    obtain_dst_frame_time = GetCurMsTime();
     switch (frame->format) {
         case AV_PIX_FMT_YUV420P:
             obtainYUV420p(frame, m_dst_frame);
             m_dst_frame->format = AV_PIX_FMT_YUV420P;
             break;
         case AV_PIX_FMT_NV12:
-            obtainNV12(frame, m_dst_frame);
+            obtainNV12orNV21(frame, m_dst_frame);
             m_dst_frame->format = AV_PIX_FMT_NV12;
             break;
         case AV_PIX_FMT_NV21:
-            obtainNV12(frame, m_dst_frame);
+            obtainNV12orNV21(frame, m_dst_frame);
             m_dst_frame->format = AV_PIX_FMT_NV21;
             break;
         default:

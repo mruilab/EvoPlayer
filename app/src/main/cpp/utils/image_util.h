@@ -29,7 +29,7 @@ static void obtainYUV420p(AVFrame *srcFrame, AVFrame *dstFrame) {
     }
 }
 
-static void obtainNV12(AVFrame *srcFrame, AVFrame *dstFrame) {
+static void obtainNV12orNV21(AVFrame *srcFrame, AVFrame *dstFrame) {
     int w = srcFrame->width;
     int h = srcFrame->height;
 

@@ -26,6 +26,7 @@ void VideoDrawer::Render(OneFrame *one_frame) {
             SetTextureNum(3);
             break;
         case AV_PIX_FMT_NV12:
+        case AV_PIX_FMT_NV21:
             SetTextureNum(2);
             break;
         default:
@@ -51,6 +52,8 @@ const char *VideoDrawer::GetFragmentShader() {
             return i420_fragment_shader();
         case AV_PIX_FMT_NV12:
             return nv12_fragment_shader();
+        case AV_PIX_FMT_NV21:
+            return nv21_fragment_shader();
         default:
             return rgba_fragment_shader();
     }
@@ -72,6 +75,7 @@ void VideoDrawer::BindTexture() {
             ActivateTexture(2, GL_TEXTURE_2D);
             break;
         case AV_PIX_FMT_NV12:
+        case AV_PIX_FMT_NV21:
             ActivateTexture(0, GL_TEXTURE_2D);
             ActivateTexture(1, GL_TEXTURE_2D);
             break;
@@ -108,6 +112,7 @@ void VideoDrawer::PrepareDraw() {
                          m_frame->data[2]);
             break;
         case AV_PIX_FMT_NV12:
+        case AV_PIX_FMT_NV21:
             glActiveTexture(GL_TEXTURE0);
             glTexImage2D(GL_TEXTURE_2D, 0,
                          GL_LUMINANCE,
