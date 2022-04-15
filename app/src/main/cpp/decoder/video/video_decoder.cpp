@@ -45,30 +45,34 @@ void VideoDecoder::InitRender(JNIEnv *env) {
 
 void VideoDecoder::InitBuffer() {
     m_dst_frame = av_frame_alloc();
-    m_dst_frame->format = DST_FORMAT;
     // 获取缓存大小
-    int numBytes = av_image_get_buffer_size(DST_FORMAT, m_dst_w, m_dst_h, 1);
+    int numBytes = av_image_get_buffer_size(AV_PIX_FMT_RGBA, m_dst_w, m_dst_h, 1);
     // 分配内存
     m_buf_for_dst_frame = (uint8_t *) av_malloc(numBytes * sizeof(uint8_t));
     // 将内存分配给dst_frame，并将内存格式化为三个通道后，分别保存其地址
     av_image_fill_arrays(m_dst_frame->data, m_dst_frame->linesize,
-                         m_buf_for_dst_frame, DST_FORMAT, m_dst_w, m_dst_h, 1);
+                         m_buf_for_dst_frame, AV_PIX_FMT_RGBA, m_dst_w, m_dst_h, 1);
 }
 
 void VideoDecoder::InitSws() {
     // 初始化格式转换工具
     m_sws_ctx = sws_getContext(width(), height(), video_pixel_format(),
-                               m_dst_w, m_dst_h, DST_FORMAT,
+                               m_dst_w, m_dst_h, AV_PIX_FMT_RGBA,
                                SWS_FAST_BILINEAR, NULL, NULL, NULL);
 }
 
 void VideoDecoder::Render(AVFrame *frame) {
     obtain_dst_frame_time = GetCurMsTime();
-    if (frame->format != m_dst_frame->format) {
-        sws_scale(m_sws_ctx, frame->data, frame->linesize, 0,
-                  height(), m_dst_frame->data, m_dst_frame->linesize);
-    } else {
-        obtainYUV420p(frame, m_dst_frame);
+    switch (frame->format) {
+        case AV_PIX_FMT_YUV420P:
+            obtainYUV420p(frame, m_dst_frame);
+            m_dst_frame->format = AV_PIX_FMT_YUV420P;
+            break;
+        default:
+            sws_scale(m_sws_ctx, frame->data, frame->linesize, 0,
+                      height(), m_dst_frame->data, m_dst_frame->linesize);
+            m_dst_frame->format = AV_PIX_FMT_RGBA;
+            break;
     }
     LOG_INFO(TAG, LogSpec(), "obtain dst_frame time: %ldms",
              GetCurMsTime() - obtain_dst_frame_time)

@@ -4,7 +4,6 @@
 
 #include "video_drawer.h"
 #include "shader.h"
-#include "image_util.h"
 
 VideoDrawer::VideoDrawer() : Drawer(0, 0) {
 
@@ -44,7 +43,7 @@ const char *VideoDrawer::GetVertexShader() {
 }
 
 const char *VideoDrawer::GetFragmentShader() {
-    switch (DST_FORMAT) {
+    switch (m_frame->format) {
         case AV_PIX_FMT_YUV420P:
             return i420_fragment_shader();
         default:

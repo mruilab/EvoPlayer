@@ -10,14 +10,6 @@ extern "C" {
 #include <libavutil/frame.h>
 };
 
-#define IMAGE_FORMAT_RGBA           0x01
-#define IMAGE_FORMAT_NV21           0x02
-#define IMAGE_FORMAT_NV12           0x03
-#define IMAGE_FORMAT_I420           0x04
-
-//视频数据目标格式
-static const AVPixelFormat DST_FORMAT = AV_PIX_FMT_YUV420P;
-
 static void obtainYUV420p(AVFrame *srcFrame, AVFrame *dstFrame) {
     int w = srcFrame->width;
     int h = srcFrame->height;
