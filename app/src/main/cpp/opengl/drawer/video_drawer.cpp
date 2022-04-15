@@ -22,6 +22,14 @@ void VideoDrawer::InitRender(JNIEnv *env, int video_width, int video_height, int
 
 void VideoDrawer::Render(OneFrame *one_frame) {
     m_frame = one_frame->frame;
+    switch (m_frame->format) {
+        case AV_PIX_FMT_YUV420P:
+            SetTextureNum(3);
+            break;
+        default:
+            SetTextureNum(1);
+            break;
+    }
 }
 
 void VideoDrawer::ReleaseRender() {
@@ -42,10 +50,6 @@ const char *VideoDrawer::GetFragmentShader() {
         default:
             return rgba_fragment_shader();
     }
-}
-
-bool VideoDrawer::receiveFirstFrame() {
-    return m_frame != NULL;
 }
 
 void VideoDrawer::InitCstShaderHandler() {

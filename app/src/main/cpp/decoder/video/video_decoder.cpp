@@ -68,10 +68,7 @@ void VideoDecoder::Render(AVFrame *frame) {
         sws_scale(m_sws_ctx, frame->data, frame->linesize, 0,
                   height(), m_dst_frame->data, m_dst_frame->linesize);
     } else {
-        if (frame->format == AV_PIX_FMT_YUV420P)
-            obtainYUV420p(frame, m_dst_frame);
-        else
-            m_dst_frame = frame;
+        obtainYUV420p(frame, m_dst_frame);
     }
     LOG_INFO(TAG, LogSpec(), "obtain dst_frame time: %ldms",
              GetCurMsTime() - obtain_dst_frame_time)

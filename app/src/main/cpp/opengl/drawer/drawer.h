@@ -13,12 +13,10 @@ extern "C" {
 #include <GLES3/gl3ext.h>
 };
 
-#define TEXTURE_NUM 3
-
 class Drawer {
 private:
     const char *TAG = "Drawer";
-    
+
     const GLfloat m_vertex_coors[8] = {
             -1.0f, -1.0f,
             1.0f, -1.0f,
@@ -47,7 +45,11 @@ private:
 
     GLuint m_program_id = 0;
 
-    GLuint *m_texture_ids = new GLuint[TEXTURE_NUM];
+    int m_texture_num = -1;
+
+    bool is_create_texture_id = false;
+
+    GLuint *m_texture_ids = new GLuint[GL_NONE];
 
     GLint m_vertex_matrix_handler = -1;
 
@@ -101,6 +103,8 @@ protected:
 
     void SetVideoSize(int width, int height);
 
+    void SetTextureNum(int num);
+
     void ActivateTexture(GLenum index = 0, GLenum type = GL_TEXTURE_2D);
 
     virtual const char *GetVertexShader() = 0;
@@ -108,8 +112,6 @@ protected:
     virtual const char *GetFragmentShader() = 0;
 
     virtual void InitCstShaderHandler() = 0;
-
-    virtual bool receiveFirstFrame() = 0;
 
     virtual void BindTexture() = 0;
 

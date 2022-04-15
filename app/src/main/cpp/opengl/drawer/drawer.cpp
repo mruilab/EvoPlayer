@@ -26,8 +26,12 @@ void Drawer::SetDisplaySize(int width, int height) {
     this->m_display_height = height;
 }
 
+void Drawer::SetTextureNum(int num) {
+    this->m_texture_num = num;
+}
+
 void Drawer::Draw() {
-    if (IsReadyToDraw() && receiveFirstFrame()) {
+    if (IsReadyToDraw()) {
         CreateTextureId();
         UpdateMVPMatrix();
         CreateProgram();
@@ -39,17 +43,15 @@ void Drawer::Draw() {
 }
 
 bool Drawer::IsReadyToDraw() {
-    return m_origin_width > 0 && m_origin_height > 0;
+    return m_origin_width > 0 && m_origin_height > 0 && m_texture_num > 0;
 }
 
-bool hasCreateTextureId = false;
-
 void Drawer::CreateTextureId() {
-    if (!hasCreateTextureId) {
-        glGenTextures(TEXTURE_NUM, m_texture_ids);
-        LOGI(TAG, "Create texture id : %d, %x", m_texture_ids, glGetError())
+    if (!is_create_texture_id) {
+        glGenTextures(m_texture_num, m_texture_ids);
+        LOGI(TAG, "Create texture id : %d, %x", m_texture_num, glGetError())
         if (glGetError() == 0)
-            hasCreateTextureId = true;
+            is_create_texture_id = true;
     }
 }
 
@@ -164,7 +166,7 @@ void Drawer::Release() {
     glDisableVertexAttribArray(m_vertex_pos_handler);
     glDisableVertexAttribArray(m_texture_pos_handler);
     glBindTexture(GL_TEXTURE_2D, 0);
-    glDeleteTextures(TEXTURE_NUM, m_texture_ids);
-    hasCreateTextureId = false;
+    glDeleteTextures(m_texture_num, m_texture_ids);
+    is_create_texture_id = false;
     glDeleteProgram(m_program_id);
 }
