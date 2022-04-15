@@ -26,7 +26,34 @@ void Drawer::SetDisplaySize(int width, int height) {
     this->m_display_height = height;
 }
 
-void Drawer::InitDefMatrix() {
+void Drawer::Draw() {
+    if (IsReadyToDraw() && receiveFirstFrame()) {
+        CreateTextureId();
+        UpdateMVPMatrix();
+        CreateProgram();
+        BindTexture();  //子类实现
+        PrepareDraw();  //子类实现
+        DoDraw();
+        DoneDraw();
+    }
+}
+
+bool Drawer::IsReadyToDraw() {
+    return m_origin_width > 0 && m_origin_height > 0;
+}
+
+bool hasCreateTextureId = false;
+
+void Drawer::CreateTextureId() {
+    if (!hasCreateTextureId) {
+        glGenTextures(TEXTURE_NUM, m_texture_ids);
+        LOGI(TAG, "Create texture id : %d, %x", m_texture_ids, glGetError())
+        if (glGetError() == 0)
+            hasCreateTextureId = true;
+    }
+}
+
+void Drawer::UpdateMVPMatrix() {
     if (m_matrix != NULL)return;
     int dstWidth = m_display_width;
     int dstHeight = dstWidth * m_origin_height / m_origin_width;
@@ -39,41 +66,6 @@ void Drawer::InitDefMatrix() {
         m_transform = glm::scale(m_transform, glm::vec3(1, scale, 1));
     }
     m_matrix = glm::value_ptr(m_transform);
-}
-
-void Drawer::Draw() {
-    if (IsReadyToDraw()) {
-        CreateTextureId();
-        InitDefMatrix();
-        CreateProgram();
-        BindTexture();
-        PrepareDraw();
-        DoDraw();
-        DoneDraw();
-    }
-}
-
-bool Drawer::IsReadyToDraw() {
-    return m_origin_width > 0 && m_origin_height > 0;
-}
-
-void Drawer::DoDraw() {
-    //启用顶点的句柄
-    glEnableVertexAttribArray(m_vertex_pos_handler);
-    glEnableVertexAttribArray(m_texture_pos_handler);
-    //设置着色器参数
-    glUniformMatrix4fv(m_vertex_matrix_handler, 1, GL_FALSE, m_matrix);
-    glVertexAttribPointer(m_vertex_pos_handler, 2, GL_FLOAT, GL_FALSE, 0, m_vertex_coors);
-    glVertexAttribPointer(m_texture_pos_handler, 2, GL_FLOAT, GL_FALSE, 0, m_texture_coors);
-    //开始绘制
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-}
-
-void Drawer::CreateTextureId() {
-    if (m_texture_id == 0) {
-        glGenTextures(1, &m_texture_id);
-        LOGI(TAG, "Create texture id : %d, %x", m_texture_id, glGetError())
-    }
 }
 
 void Drawer::CreateProgram() {
@@ -98,7 +90,6 @@ void Drawer::CreateProgram() {
         m_vertex_matrix_handler = glGetUniformLocation(m_program_id, "u_MVPMatrix");
         m_vertex_pos_handler = glGetAttribLocation(m_program_id, "a_position");
         m_texture_pos_handler = glGetAttribLocation(m_program_id, "a_texCoord");
-        m_texture_handler = glGetUniformLocation(m_program_id, "u_texture");
 
         InitCstShaderHandler();
 
@@ -142,15 +133,14 @@ GLuint Drawer::LoadShader(GLenum type, const GLchar *shader_code) {
     return shader;
 }
 
-void Drawer::ActivateTexture(GLenum type, GLuint texture, GLenum index, int texture_handler) {
-    if (texture == -1) texture = m_texture_id;
-    if (texture_handler == -1) texture_handler = m_texture_handler;
+void Drawer::ActivateTexture(GLenum index, GLenum type) {
     //激活指定纹理单元
     glActiveTexture(GL_TEXTURE0 + index);
     //绑定纹理ID到纹理单元
-    glBindTexture(type, texture);
+    glBindTexture(type, m_texture_ids[index]);
     //将活动的纹理单元传递到着色器里面
-    glUniform1i(texture_handler, index);
+    glUniform1i(index, index);
+
     //配置边缘过渡参数
     glTexParameterf(type, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameterf(type, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -158,10 +148,23 @@ void Drawer::ActivateTexture(GLenum type, GLuint texture, GLenum index, int text
     glTexParameteri(type, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 }
 
+void Drawer::DoDraw() {
+    //启用顶点的句柄
+    glEnableVertexAttribArray(m_vertex_pos_handler);
+    glEnableVertexAttribArray(m_texture_pos_handler);
+    //设置着色器参数
+    glUniformMatrix4fv(m_vertex_matrix_handler, 1, GL_FALSE, m_matrix);
+    glVertexAttribPointer(m_vertex_pos_handler, 2, GL_FLOAT, GL_FALSE, 0, m_vertex_coors);
+    glVertexAttribPointer(m_texture_pos_handler, 2, GL_FLOAT, GL_FALSE, 0, m_texture_coors);
+    //开始绘制
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+}
+
 void Drawer::Release() {
     glDisableVertexAttribArray(m_vertex_pos_handler);
     glDisableVertexAttribArray(m_texture_pos_handler);
     glBindTexture(GL_TEXTURE_2D, 0);
-    glDeleteTextures(1, &m_texture_id);
+    glDeleteTextures(TEXTURE_NUM, m_texture_ids);
+    hasCreateTextureId = false;
     glDeleteProgram(m_program_id);
 }

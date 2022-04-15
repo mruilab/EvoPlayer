@@ -17,9 +17,6 @@ class VideoDecoder : public BaseDecoder {
 private:
     const char *TAG = "VideoDecoder";
 
-    //视频数据目标格式
-    const AVPixelFormat DST_FORMAT = AV_PIX_FMT_RGBA;
-
     /**
      * 渲染时用到AVFrame，存放于OneFrame中，
      * 根据DST_FORMAT将yuv转换为目标数据
@@ -39,8 +36,8 @@ private:
     //显示的目标高
     int m_dst_h;
 
-    // 开始转换的时间戳，用于计算sws_scale耗时
-    int64_t start_sws_time;
+    // 用来计算获取目标dst_frame的耗时
+    int64_t obtain_dst_frame_time;
 
     /**
      * 初始化渲染器

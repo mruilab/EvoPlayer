@@ -32,6 +32,8 @@ public:
 
     void InitCstShaderHandler() override;
 
+    bool receiveFirstFrame() override;
+
     void BindTexture() override;
 
     void PrepareDraw() override;

@@ -13,18 +13,12 @@ extern "C" {
 #include <GLES3/gl3ext.h>
 };
 
+#define TEXTURE_NUM 3
+
 class Drawer {
 private:
     const char *TAG = "Drawer";
-
-    /**上下颠倒的顶点矩阵*/
-    const GLfloat m_reserve_vertex_coors[8] = {
-            -1.0f, 1.0f,
-            1.0f, 1.0f,
-            -1.0f, -1.0f,
-            1.0f, -1.0f
-    };
-
+    
     const GLfloat m_vertex_coors[8] = {
             -1.0f, -1.0f,
             1.0f, -1.0f,
@@ -39,21 +33,27 @@ private:
             1.0f, 0.0f
     };
 
+    /**上下颠倒的顶点矩阵*/
+    const GLfloat m_reserve_vertex_coors[8] = {
+            -1.0f, 1.0f,
+            1.0f, 1.0f,
+            -1.0f, -1.0f,
+            1.0f, -1.0f
+    };
+
     glm::mat4 m_transform = glm::mat4(1.0f);
 
     float *m_matrix = NULL;
 
     GLuint m_program_id = 0;
 
-    GLuint m_texture_id = 0;
+    GLuint *m_texture_ids = new GLuint[TEXTURE_NUM];
 
     GLint m_vertex_matrix_handler = -1;
 
     GLint m_vertex_pos_handler = -1;
 
     GLint m_texture_pos_handler = -1;
-
-    GLint m_texture_handler = -1;
 
     int m_origin_width = 0;
 
@@ -65,7 +65,7 @@ private:
 
     void CreateTextureId();
 
-    void InitDefMatrix();
+    void UpdateMVPMatrix();
 
     void CreateProgram();
 
@@ -98,19 +98,18 @@ public:
     void Release();
 
 protected:
-    // 自定义用户数据，可用于存放画面数据
-    void *cst_data = NULL;
 
     void SetVideoSize(int width, int height);
 
-    void ActivateTexture(GLenum type = GL_TEXTURE_2D, GLuint texture = -1,
-                         GLenum index = 0, int texture_handler = -1);
+    void ActivateTexture(GLenum index = 0, GLenum type = GL_TEXTURE_2D);
 
     virtual const char *GetVertexShader() = 0;
 
     virtual const char *GetFragmentShader() = 0;
 
     virtual void InitCstShaderHandler() = 0;
+
+    virtual bool receiveFirstFrame() = 0;
 
     virtual void BindTexture() = 0;
 

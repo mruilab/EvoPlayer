@@ -20,8 +20,8 @@ static const char f_shader[] =
                     yuv.z = texture(s_texture2, v_texCoord).r - 0.5;
 
                     vec3 rgb = mat3(1.0, 1.0, 1.0,
-                                    0.0, -0.344, 1.770,
-                                    1.403, -0.714, 0.0) * yuv;
+                                    0.0, -0.39465, 2.03211,
+                                    1.13983, -0.58060, 0.0) * yuv;
                     out_color = vec4(rgb, 1.0);
                 }
         );
