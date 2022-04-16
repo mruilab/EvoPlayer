@@ -1,5 +1,5 @@
 //
-// Created by liurui on 2022/4/14.
+// Created by mruilab on 2022/4/14.
 //
 
 #ifndef EVOPLAYER_SHADER_H
@@ -14,5 +14,11 @@
 const char *default_vertex_shader();
 
 const char *rgba_fragment_shader();
+
+const char *i420_fragment_shader();
+
+const char *nv12_fragment_shader();
+
+const char *nv21_fragment_shader();
 
 #endif //EVOPLAYER_SHADER_H

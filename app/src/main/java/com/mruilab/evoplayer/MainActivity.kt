@@ -52,7 +52,6 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             }
 
             override fun surfaceDestroyed(holder: SurfaceHolder) {
-                mPlayer.stop(player!!)
             }
 
         })

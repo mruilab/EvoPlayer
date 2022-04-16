@@ -1,5 +1,5 @@
 //
-// Created by liurui on 2022/4/14.
+// Created by mruilab on 2022/4/14.
 //
 
 #include "shader.h"
