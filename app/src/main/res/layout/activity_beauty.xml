@@ -12,7 +12,122 @@
         android:id="@+id/text_face_num"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="16sp"
-        android:textColor="@color/white"/>
+        android:text="Track Face Number: 0"
+        android:textColor="#ff0000"
+        android:textSize="16sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="vertical"
+        android:paddingLeft="3dp"
+        android:paddingRight="10dp"
+        android:paddingBottom="20dp">
+
+        <LinearLayout
+            android:id="@+id/sharpen_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="锐化: "
+                android:textColor="@color/white" />
+
+            <SeekBar
+                android:id="@+id/sharpen_seek"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="10"
+                android:maxHeight="2dp"
+                android:minHeight="2dp"
+                android:progress="0"
+                android:progressDrawable="@drawable/seek_bar_bg"
+                android:thumb="@drawable/seek_bar_thumb" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/color_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="美白: "
+                android:textColor="@color/white" />
+
+            <SeekBar
+                android:id="@+id/color_seek"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="10"
+                android:maxHeight="2dp"
+                android:minHeight="2dp"
+                android:progress="0"
+                android:progressDrawable="@drawable/seek_bar_bg"
+                android:thumb="@drawable/seek_bar_thumb" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/red_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="红润: "
+                android:textColor="@color/white" />
+
+            <SeekBar
+                android:id="@+id/red_seek"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="10"
+                android:maxHeight="2dp"
+                android:minHeight="2dp"
+                android:progress="0"
+                android:progressDrawable="@drawable/seek_bar_bg"
+                android:thumb="@drawable/seek_bar_thumb" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/blur_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="磨皮: "
+                android:textColor="@color/white" />
+
+            <SeekBar
+                android:id="@+id/blur_seek"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="60"
+                android:maxHeight="2dp"
+                android:minHeight="2dp"
+                android:progress="0"
+                android:progressDrawable="@drawable/seek_bar_bg"
+                android:thumb="@drawable/seek_bar_thumb" />
+        </LinearLayout>
+
+    </LinearLayout>
+
 
 </RelativeLayout>

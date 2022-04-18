@@ -16,10 +16,10 @@ public class FaceBeautySource {
         recommendFaceBeauty.setFilterName(FaceBeautyFilterEnum.ZIRAN_2);
         recommendFaceBeauty.setFilterIntensity(0.4);
         /*美肤*/
-        recommendFaceBeauty.setSharpenIntensity(0.2);
-        recommendFaceBeauty.setColorIntensity(0.3);
-        recommendFaceBeauty.setRedIntensity(0.3);
-        recommendFaceBeauty.setBlurIntensity(4.2);
+        recommendFaceBeauty.setSharpenIntensity(0.0); //0.2
+        recommendFaceBeauty.setColorIntensity(0.0);  //0.3
+        recommendFaceBeauty.setRedIntensity(0.0);   //0.3
+        recommendFaceBeauty.setBlurIntensity(0.0); //4.2
         /*美型*/
         recommendFaceBeauty.setFaceShapeIntensity(1.0);
         recommendFaceBeauty.setEyeEnlargingIntensityV2(0.4);
