@@ -25,14 +25,25 @@ android {
         }
 
         ndk {
-            abiFilters "arm64-v8a","armeabi-v7a"
+            abiFilters "arm64-v8a", "armeabi-v7a"
         }
     }
+    // 签名文件的信息存在各自编译的本地环境中
+    signingConfigs {
+        release {
+            keyAlias HC2_RELEASE_KEY_ALIAS
+            keyPassword HC2_RELEASE_KEY_PASSWORD
+            storeFile file(HC2_RELEASE_STORE_FILE)
+            storePassword HC2_RELEASE_STORE_PASSWORD
+        }
+    }
+
 
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
     externalNativeBuild {
