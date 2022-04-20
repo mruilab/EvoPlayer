@@ -7,9 +7,15 @@ import android.content.pm.ConfigurationInfo;
 import android.graphics.Color;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Message;
 import android.util.Log;
+import android.view.Surface;
 import android.widget.SeekBar;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
 
 import com.faceunity.core.entity.FURenderInputData;
 import com.faceunity.core.entity.FURenderOutputData;
@@ -44,12 +50,20 @@ public class BeautyActivity extends Activity {
     private FURenderKit mFURenderKit = FURenderKit.getInstance();
     FURenderInputData.FURenderConfig mConfig;
 
+    private long playerID;
+
+    private RenderBean mRenderBean;
+
+    private HandlerThread mHandlerThread;
+    private Handler mHandler;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_beauty);
-        initBeauty();
 
+        initRenderThread();
+        initBeauty();
         video_path = getIntent().getStringExtra("path");
 
         mFaceNumText = findViewById(R.id.text_face_num);
@@ -72,7 +86,11 @@ public class BeautyActivity extends Activity {
             mGlSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
         }
 
-        playVideo();
+//        playVideo();
+        if (playerID == 0) {
+            playerID = createGLPlayer(video_path, null);
+            playOrPause(playerID);
+        }
     }
 
     public void initSeekBarListener() {
@@ -212,6 +230,94 @@ public class BeautyActivity extends Activity {
         mThread.start();
     }
 
+    private void initRenderThread() {
+        mHandlerThread = new HandlerThread("RenderThread");
+        mHandlerThread.start();
+
+        mHandler = new Handler(mHandlerThread.getLooper()) {
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                switch (msg.what) {
+                    case 1:
+                        mFURenderKit.createEGLContext();
+                        mFURenderKit.setUseTexAsync(true);
+                        break;
+                    case 2:
+                        RenderBean bean = (RenderBean) msg.obj;
+                        int faceNum = FUAIKit.getInstance().trackFace(bean.getBuffer(),
+                                FUInputBufferEnum.FU_FORMAT_YUV_BUFFER, bean.getWidth(), bean.getHeight());
+                        runOnUiThread(() -> {
+                            mFaceNumText.setTextColor(faceNum > 0 ? Color.WHITE : Color.RED);
+                            mFaceNumText.setText("Track Face Number: " + faceNum);
+                        });
+                        FURenderInputData inputData = new FURenderInputData(bean.getWidth(), bean.getHeight());
+                        FURenderInputData.FUImageBuffer imageBuffer =
+                                new FURenderInputData.FUImageBuffer(
+                                        FUInputBufferEnum.FU_FORMAT_I420_BUFFER,
+                                        bean.getBuffer());
+
+                        inputData.setRenderConfig(mConfig);
+                        inputData.setImageBuffer(imageBuffer);
+
+                        FURenderOutputData outputData = mFURenderKit.renderWithInput(inputData);
+                        mRender.setYuvData(outputData.getImage().getBuffer(),
+                                bean.getWidth(), bean.getHeight(), 0);
+                        mGlSurfaceView.requestRender();
+                        break;
+                    case 3:
+                        RenderBean bean1 = (RenderBean) msg.obj;
+                        int faceNum1 = FUAIKit.getInstance().trackFace(bean1.getBuffer(),
+                                FUInputBufferEnum.FU_FORMAT_YUV_BUFFER, bean1.getWidth(), bean1.getHeight());
+                        runOnUiThread(() -> {
+                            mFaceNumText.setTextColor(faceNum1 > 0 ? Color.WHITE : Color.RED);
+                            mFaceNumText.setText("Track Face Number: " + faceNum1);
+                        });
+                        FURenderInputData inputData1 = new FURenderInputData(bean1.getWidth(), bean1.getHeight());
+                        FURenderInputData.FUImageBuffer imageBuffer1 =
+                                new FURenderInputData.FUImageBuffer(
+                                        FUInputBufferEnum.FU_FORMAT_NV21_BUFFER,
+                                        bean1.getBuffer());
+
+                        inputData1.setRenderConfig(mConfig);
+                        inputData1.setImageBuffer(imageBuffer1);
+
+                        FURenderOutputData outputData1 = mFURenderKit.renderWithInput(inputData1);
+                        mRender.setYuvData(outputData1.getImage().getBuffer(),
+                                bean1.getWidth(), bean1.getHeight(), 1);
+                        mGlSurfaceView.requestRender();
+                        break;
+                    case 4:
+                        RenderBean bean2 = (RenderBean) msg.obj;
+                        int faceNum2 = FUAIKit.getInstance().trackFace(bean2.getBuffer(),
+                                FUInputBufferEnum.FU_FORMAT_YUV_BUFFER, bean2.getWidth(), bean2.getHeight());
+                        runOnUiThread(() -> {
+                            mFaceNumText.setTextColor(faceNum2 > 0 ? Color.WHITE : Color.RED);
+                            mFaceNumText.setText("Track Face Number: " + faceNum2);
+                        });
+                        FURenderInputData inputData2 = new FURenderInputData(bean2.getWidth(), bean2.getHeight());
+                        FURenderInputData.FUImageBuffer imageBuffer2 =
+                                new FURenderInputData.FUImageBuffer(
+                                        FUInputBufferEnum.FU_FORMAT_NV21_BUFFER,
+                                        bean2.getBuffer());
+
+                        inputData2.setRenderConfig(mConfig);
+                        inputData2.setImageBuffer(imageBuffer2);
+
+                        FURenderOutputData outputData2 = mFURenderKit.renderWithInput(inputData2);
+                        mRender.setYuvData(outputData2.getImage().getBuffer(),
+                                bean2.getWidth(), bean2.getHeight(), 2);
+                        mGlSurfaceView.requestRender();
+                        break;
+                    case 6:
+                        mFURenderKit.clearCacheResource();
+                        mFURenderKit.releaseEGLContext();
+                        mFURenderKit.releaseSafe();
+                        break;
+                }
+            }
+        };
+    }
 
     private void initBeauty() {
         FUAIKit.getInstance().loadAIProcessor(DemoConfig.BUNDLE_AI_FACE, FUAITypeEnum.FUAITYPE_FACEPROCESSOR);//加载人脸驱动
@@ -222,6 +328,8 @@ public class BeautyActivity extends Activity {
         mConfig = new FURenderInputData.FURenderConfig();
         mConfig.setNeedBufferReturn(true);
         mConfig.setOutputMatrix(FUTransformMatrixEnum.CCROT0_FLIPVERTICAL);
+
+        initEglContext();
     }
 
     private void dealWithYuv(byte[] i420, int width, int height) {
@@ -234,12 +342,32 @@ public class BeautyActivity extends Activity {
         inputData.setImageBuffer(imageBuffer);
 
         FURenderOutputData outputData = mFURenderKit.renderWithInput(inputData);
-        byte[] buffer = outputData.getImage().getBuffer();
+        byte[] yBuffer = outputData.getImage().getBuffer();
         Log.i(TAG, "deal with yuv time:" + (System.currentTimeMillis() - startMs));
-        mRender.setYuvData(buffer, width, height);
+        mRender.setYuvData(yBuffer, width, height, 0);
         mGlSurfaceView.requestRender();
     }
 
+    public void initEglContext() {
+        Message msg = Message.obtain();
+        msg.what = 1;
+        mHandler.sendMessage(msg);
+    }
+
+    public void releaseEglContext() {
+        Message msg = Message.obtain();
+        msg.what = 6;
+        mHandler.sendMessage(msg);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (playerID != 0)
+            playOrPause(playerID);
+        releaseEglContext();
+        mHandlerThread.quitSafely();
+    }
 
     @Override
     protected void onDestroy() {
@@ -249,5 +377,100 @@ public class BeautyActivity extends Activity {
             mVideoDecoder.stop();
             mVideoDecoder = null;
         }
+    }
+
+    /******************************** native ************************************/
+    static {
+        System.loadLibrary("evo-lib");
+    }
+
+    public native String getFFmpegVersion();
+
+    public native void getCodecSupport();
+
+    public native int playVideo(String videoPath, Surface surface);
+
+    public native long createPlayer(String videoPath, Surface surface);
+
+    public native void play(long player);
+
+    public native long createGLPlayer(String videoPath, Surface surface);
+
+    public native void playOrPause(long player);
+
+    public native void stop(long player);
+
+    /**
+     * Native层调用
+     *
+     * @param y
+     * @param u
+     * @param v
+     * @param width
+     * @param height
+     */
+    public void dealWithI420(byte[] y, byte[] u, byte[] v, int width, int height) {
+        byte[] yuv = new byte[y.length + u.length + v.length];
+        System.arraycopy(y, 0, yuv, 0, y.length);
+        System.arraycopy(u, 0, yuv, y.length, u.length);
+        System.arraycopy(v, 0, yuv, y.length + u.length, v.length);
+        mRenderBean = new RenderBean(yuv, width, height);
+        Message msg = Message.obtain();
+        msg.what = 2;
+        msg.obj = mRenderBean;
+        mHandler.sendMessage(msg);
+    }
+
+    /**
+     * Native层调用
+     *
+     * @param y
+     * @param uv
+     * @param width
+     * @param height
+     */
+    public void dealWithNV12(byte[] y, byte[] uv, int width, int height) {
+        byte[] yuv = new byte[y.length + uv.length];
+        System.arraycopy(y, 0, yuv, 0, y.length);
+        System.arraycopy(uv, 0, yuv, y.length, uv.length);
+        mRenderBean = new RenderBean(yuv, width, height);
+        Message msg = Message.obtain();
+        msg.what = 3;
+        msg.obj = mRenderBean;
+        mHandler.sendMessage(msg);
+    }
+
+    /**
+     * Native层调用
+     *
+     * @param y
+     * @param uv
+     * @param width
+     * @param height
+     */
+    public void dealWithNV21(byte[] y, byte[] uv, int width, int height) {
+        byte[] yuv = new byte[y.length + uv.length];
+        System.arraycopy(y, 0, yuv, 0, y.length);
+        System.arraycopy(uv, 0, yuv, y.length, uv.length);
+        mRenderBean = new RenderBean(yuv, width, height);
+        Message msg = Message.obtain();
+        msg.what = 4;
+        msg.obj = mRenderBean;
+        mHandler.sendMessage(msg);
+    }
+
+    /**
+     * Native层调用
+     *
+     * @param rgba
+     * @param width
+     * @param height
+     */
+    public void dealWithRGBA(byte[] rgba, int width, int height) {
+        mRenderBean = new RenderBean(rgba, width, height);
+        Message msg = Message.obtain();
+        msg.what = 5;
+        msg.obj = mRenderBean;
+        mHandler.sendMessage(msg);
     }
 }

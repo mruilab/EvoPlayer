@@ -6,7 +6,7 @@
 #include "native_render.h"
 
 Player::Player(JNIEnv *env, jstring path, jobject surface) {
-    m_video_decoder = new VideoDecoder(env, path);
+//    m_video_decoder = new VideoDecoder(env, path);
 
     //本地窗口播放
     m_video_render = new NativeRender(env, surface);

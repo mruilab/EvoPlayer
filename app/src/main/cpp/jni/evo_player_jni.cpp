@@ -99,7 +99,7 @@ void play(JNIEnv *env, jobject obj, jlong player) {
 }
 
 long create_gl_player(JNIEnv *env, jobject obj, jstring video_path, jobject surface) {
-    GLPlayer *player = new GLPlayer(env, video_path);
+    GLPlayer *player = new GLPlayer(env, obj, video_path);
     player->SetSurface(surface);
     return (uintptr_t) player;
 }
@@ -129,7 +129,7 @@ JNINativeMethod methods[] = {
 };
 
 jint registerNativeMethod(JNIEnv *env) {
-    jclass cls = env->FindClass("com/mruilab/evoplayer/EvoPlayer");
+    jclass cls = env->FindClass("com/mruilab/evoplayer/beauty/BeautyActivity");
     if (env->RegisterNatives(cls, methods, sizeof(methods) / sizeof(methods[0])) < 0) {
         return -1;
     }

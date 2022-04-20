@@ -55,12 +55,28 @@ private:
      */
     void InitSws();
 
+    JNIEnv *m_env;
+    jobject m_object;
+    jmethodID deal_with_i420;
+    jmethodID deal_with_nv12;
+    jmethodID deal_with_rgba;
+    jbyteArray yBuffer;
+    jbyteArray uBuffer;
+    jbyteArray vBuffer;
+    jbyteArray uvBuffer;
+    jbyteArray rgbaBuffer;
+
 public:
-    VideoDecoder(JNIEnv *env, jstring path, bool for_synthesizer = false);
+    VideoDecoder(JNIEnv *env, jobject obj, jstring path, bool for_synthesizer = false);
 
     ~VideoDecoder();
 
     void SetRender(VideoRender *render);
+
+    /**
+     * 释放回调
+     */
+    void Release() override;
 
 protected:
     AVMediaType GetMediaType() override {
@@ -89,7 +105,7 @@ protected:
     /**
      * 释放回调
      */
-    void Release() override;
+//    void Release() override;
 
     const char *const LogSpec() override {
         return "VIDEO";

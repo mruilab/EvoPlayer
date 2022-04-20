@@ -19,7 +19,7 @@ private:
     VideoDrawer *m_video_drawer;
 
 public:
-    GLPlayer(JNIEnv *env, jstring path);
+    GLPlayer(JNIEnv *env, jobject obj, jstring path);
 
     ~GLPlayer();
 

@@ -14,7 +14,6 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 public class YuvRender implements GLSurfaceView.Renderer {
-    private static final String TAG = YuvRender.class.getSimpleName();
 
     private Context mContext;
 
@@ -24,13 +23,18 @@ public class YuvRender implements GLSurfaceView.Renderer {
     private int mProgram;
     private int[] mTextureIds;
 
+    private int mImageType = -1;
+
     private int yuvWidth;
     private int yuvHeight;
     private ByteBuffer yBuffer;
     private ByteBuffer uBuffer;
     private ByteBuffer vBuffer;
+    private ByteBuffer uvBuffer;
 
     protected FloatBuffer mVertexBuffer;
+
+    private boolean isInit = false;
 
     private int mVertexMatrixHandler;
     protected float mDefMatrix[] = {
@@ -46,7 +50,7 @@ public class YuvRender implements GLSurfaceView.Renderer {
 
     @Override
     public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
-        init();
+//        init();
     }
 
     @Override
@@ -59,8 +63,14 @@ public class YuvRender implements GLSurfaceView.Renderer {
 
     @Override
     public void onDrawFrame(GL10 gl10) {
-        if (yBuffer == null || uBuffer == null || vBuffer == null) {
+        if (yBuffer == null ||
+                (mImageType == 0 && (uBuffer == null || vBuffer == null)) ||
+                (mImageType == 1 && (uvBuffer == null))) {
             return;
+        }
+        if (!isInit) {
+            init();
+            isInit = true;
         }
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT); // clear color buffer
         // 1. 选择使用的程序
@@ -71,18 +81,28 @@ public class YuvRender implements GLSurfaceView.Renderer {
         GLES30.glTexImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_LUMINANCE, yuvWidth,
                 yuvHeight, 0, GLES30.GL_LUMINANCE, GLES30.GL_UNSIGNED_BYTE, yBuffer); // 赋值
         GLES30.glUniform1i(0, 0); // sampler_y的location=0, 把纹理0赋值给sampler_y
-        // 2.2 加载纹理u
-        GLES30.glActiveTexture(GLES30.GL_TEXTURE1);
-        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, mTextureIds[1]);
-        GLES30.glTexImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_LUMINANCE, yuvWidth / 2,
-                yuvHeight / 2, 0, GLES30.GL_LUMINANCE, GLES30.GL_UNSIGNED_BYTE, uBuffer);
-        GLES30.glUniform1i(1, 1); // sampler_u的location=1, 把纹理1赋值给sampler_u
-        // 2.3 加载纹理v
-        GLES30.glActiveTexture(GLES30.GL_TEXTURE2);
-        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, mTextureIds[2]);
-        GLES30.glTexImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_LUMINANCE, yuvWidth / 2,
-                yuvHeight / 2, 0, GLES30.GL_LUMINANCE, GLES30.GL_UNSIGNED_BYTE, vBuffer);
-        GLES30.glUniform1i(2, 2); // sampler_v的location=2, 把纹理1赋值给sampler_v
+        if (mImageType == 0) {
+            // 2.2 加载纹理u
+            GLES30.glActiveTexture(GLES30.GL_TEXTURE1);
+            GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, mTextureIds[1]);
+            GLES30.glTexImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_LUMINANCE, yuvWidth / 2,
+                    yuvHeight / 2, 0, GLES30.GL_LUMINANCE, GLES30.GL_UNSIGNED_BYTE, uBuffer);
+            GLES30.glUniform1i(1, 1); // sampler_u的location=1, 把纹理1赋值给sampler_u
+            // 2.3 加载纹理v
+            GLES30.glActiveTexture(GLES30.GL_TEXTURE2);
+            GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, mTextureIds[2]);
+            GLES30.glTexImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_LUMINANCE, yuvWidth / 2,
+                    yuvHeight / 2, 0, GLES30.GL_LUMINANCE, GLES30.GL_UNSIGNED_BYTE, vBuffer);
+            GLES30.glUniform1i(2, 2); // sampler_v的location=2, 把纹理1赋值给sampler_v
+        } else {
+            // 2.2 加载纹理uv
+            GLES30.glActiveTexture(GLES30.GL_TEXTURE1);
+            GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, mTextureIds[1]);
+            GLES30.glTexImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_LUMINANCE_ALPHA, yuvWidth / 2,
+                    yuvHeight / 2, 0, GLES30.GL_LUMINANCE_ALPHA, GLES30.GL_UNSIGNED_BYTE, uvBuffer);
+            GLES30.glUniform1i(1, 1);
+        }
+
         // 3. 加载顶点数据
         mVertexBuffer.position(0);
         GLES30.glVertexAttribPointer(0, 3, GLES30.GL_FLOAT, false, 5 * 4, mVertexBuffer);
@@ -98,11 +118,22 @@ public class YuvRender implements GLSurfaceView.Renderer {
 
     private void init() {
         String vertexSource = ShaderUtil.loadFromAssets("vertex.vsh", mContext.getResources());
-        String fragmentSource = ShaderUtil.loadFromAssets("fragment.fsh", mContext.getResources());
+        String fragmentSource;
+        if (mImageType == 0) {
+            fragmentSource = ShaderUtil.loadFromAssets("fragment.fsh", mContext.getResources());
+        } else {
+            fragmentSource = ShaderUtil.loadFromAssets("nv12_fragment.fsh", mContext.getResources());
+        }
+
         mProgram = ShaderUtil.createProgram(vertexSource, fragmentSource);
         mVertexMatrixHandler = GLES30.glGetUniformLocation(mProgram, "uMatrix");
         //创建纹理
-        mTextureIds = new int[3];
+        if (mImageType == 0) {
+            mTextureIds = new int[3];
+        } else {
+            mTextureIds = new int[2];
+        }
+
         GLES30.glGenTextures(mTextureIds.length, mTextureIds, 0);
         for (int i = 0; i < mTextureIds.length; i++) {
             //绑定纹理
@@ -140,24 +171,41 @@ public class YuvRender implements GLSurfaceView.Renderer {
     private byte[] y;
     private byte[] u;
     private byte[] v;
+    private byte[] uv;
 
-    public void setYuvData(byte[] i420, int width, int height) {
+    public void setYuvData(byte[] yuv, int width, int height, int imageType) {
+        mImageType = imageType;
         if (yBuffer != null) yBuffer.clear();
         if (uBuffer != null) uBuffer.clear();
         if (vBuffer != null) vBuffer.clear();
+        if (uvBuffer != null) uvBuffer.clear();
 
-        if (y == null || u == null || v == null) {
-            // 该函数多次被调用的时，不要每次都new，可以设置为全局变量缓存起来
+        // 该函数多次被调用的时，不要每次都new，可以设置为全局变量缓存起来
+        if (y == null) {
             y = new byte[width * height];
+        }
+
+        if (imageType == 0 && (u == null || v == null)) {
             u = new byte[width * height / 4];
             v = new byte[width * height / 4];
         }
-        System.arraycopy(i420, 0, y, 0, y.length);
-        System.arraycopy(i420, y.length, u, 0, u.length);
-        System.arraycopy(i420, y.length + u.length, v, 0, v.length);
+
+        if ((imageType == 1 || imageType == 2) && uv == null) {
+            uv = new byte[width * height / 2];
+        }
+
+        System.arraycopy(yuv, 0, y, 0, y.length);
         yBuffer = ByteBuffer.wrap(y);
-        uBuffer = ByteBuffer.wrap(u);
-        vBuffer = ByteBuffer.wrap(v);
+        if (imageType == 0) {
+            System.arraycopy(yuv, y.length, u, 0, u.length);
+            System.arraycopy(yuv, y.length + u.length, v, 0, v.length);
+            uBuffer = ByteBuffer.wrap(u);
+            vBuffer = ByteBuffer.wrap(v);
+        } else if (imageType == 1 || imageType == 2) {
+            System.arraycopy(yuv, y.length, uv, 0, uv.length);
+            uvBuffer = ByteBuffer.wrap(uv);
+        }
+
         yuvWidth = width;
         yuvHeight = height;
     }

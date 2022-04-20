@@ -35,10 +35,10 @@ public class FrontPageActivity extends AppCompatActivity implements EasyPermissi
                         Uri uri = result.getData().getData();
                         if (uri == null) return;
                         String path = Uri2PathUtil.getRealPathFromUri(FrontPageActivity.this, uri);
-                        if (!checkIsVideo(FrontPageActivity.this, path)) {
-                            Toast.makeText(FrontPageActivity.this, "请选择正确的视频文件", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
+//                        if (!checkIsVideo(FrontPageActivity.this, path)) {
+//                            Toast.makeText(FrontPageActivity.this, "请选择正确的视频文件", Toast.LENGTH_SHORT).show();
+//                            return;
+//                        }
                         Intent intent = new Intent(FrontPageActivity.this, BeautyActivity.class);
                         intent.putExtra("path", path);
                         startActivity(intent);

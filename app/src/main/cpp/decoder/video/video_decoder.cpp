@@ -6,8 +6,14 @@
 #include "timer.h"
 #include "image_util.h"
 
-VideoDecoder::VideoDecoder(JNIEnv *env, jstring path, bool for_synthesizer)
+VideoDecoder::VideoDecoder(JNIEnv *env, jobject obj, jstring path, bool for_synthesizer)
         : BaseDecoder(env, path, for_synthesizer) {
+
+    m_object = env->NewGlobalRef(obj);
+    jclass cls = env->GetObjectClass(obj);
+    deal_with_i420 = env->GetMethodID(cls, "dealWithI420", "([B[B[BII)V");
+    deal_with_nv12 = env->GetMethodID(cls, "dealWithNV12", "([B[BII)V");
+    deal_with_rgba = env->GetMethodID(cls, "dealWithRGBA", "([BII)V");
 }
 
 VideoDecoder::~VideoDecoder() noexcept {
@@ -19,6 +25,11 @@ void VideoDecoder::SetRender(VideoRender *render) {
 }
 
 void VideoDecoder::Prepare(JNIEnv *env) {
+    m_env = env;
+    yBuffer = env->NewByteArray(width() * height());
+    uBuffer = env->NewByteArray(width() * height() / 4);
+    vBuffer = env->NewByteArray(width() * height() / 4);
+    uvBuffer = env->NewByteArray(width() * height() / 2);
     InitRender(env);
     InitSws();
 }
@@ -94,8 +105,27 @@ void VideoDecoder::Render(AVFrame *frame) {
     // YUV420P->0, NV12->23, NV21->24, RGBA->26
     LOG_INFO(TAG, LogSpec(), "obtain dst_frame time: %ldms, src format: %d, dst format: %d",
              GetCurMsTime() - obtain_dst_frame_time, frame->format, m_dst_frame->format)
+
+    if (m_dst_frame->format == AV_PIX_FMT_YUV420P) {
+        m_env->SetByteArrayRegion(yBuffer, 0, width() * height(),
+                                  reinterpret_cast<jbyte *>(m_dst_frame->data[0]));
+        m_env->SetByteArrayRegion(uBuffer, 0, width() * height() / 4,
+                                  reinterpret_cast<jbyte *>(m_dst_frame->data[1]));
+        m_env->SetByteArrayRegion(vBuffer, 0, width() * height() / 4,
+                                  reinterpret_cast<jbyte *>(m_dst_frame->data[2]));
+        m_env->CallVoidMethod(m_object, deal_with_i420, yBuffer, uBuffer, vBuffer, width(),
+                              height());
+    } else if (m_dst_frame->format == AV_PIX_FMT_NV12 ||
+               m_dst_frame->format == AV_PIX_FMT_NV21) {
+        m_env->SetByteArrayRegion(yBuffer, 0, width() * height(),
+                                  reinterpret_cast<jbyte *>(m_dst_frame->data[0]));
+        m_env->SetByteArrayRegion(uvBuffer, 0, width() * height() / 2,
+                                  reinterpret_cast<jbyte *>(m_dst_frame->data[1]));
+        m_env->CallVoidMethod(m_object, deal_with_nv12, yBuffer, uvBuffer, width(), height());
+    }
+
     OneFrame *one_frame = new OneFrame(m_dst_frame, frame->pts, time_base(), NULL, false);
-    m_video_render->Render(one_frame);
+//    m_video_render->Render(one_frame);
 
     if (m_state_cb != NULL) {
         if (m_state_cb->DecodeOneFrame(this, one_frame)) {

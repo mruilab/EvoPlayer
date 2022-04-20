@@ -29,7 +29,6 @@
             android:id="@+id/sharpen_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-
             android:orientation="horizontal">
 
             <TextView
@@ -45,7 +44,7 @@
                 android:max="10"
                 android:maxHeight="2dp"
                 android:minHeight="2dp"
-                android:progress="0"
+                android:progress="2"
                 android:progressDrawable="@drawable/seek_bar_bg"
                 android:thumb="@drawable/seek_bar_thumb" />
 
@@ -71,7 +70,7 @@
                 android:max="10"
                 android:maxHeight="2dp"
                 android:minHeight="2dp"
-                android:progress="0"
+                android:progress="3"
                 android:progressDrawable="@drawable/seek_bar_bg"
                 android:thumb="@drawable/seek_bar_thumb" />
         </LinearLayout>
@@ -96,7 +95,7 @@
                 android:max="10"
                 android:maxHeight="2dp"
                 android:minHeight="2dp"
-                android:progress="0"
+                android:progress="3"
                 android:progressDrawable="@drawable/seek_bar_bg"
                 android:thumb="@drawable/seek_bar_thumb" />
 
@@ -122,7 +121,7 @@
                 android:max="60"
                 android:maxHeight="2dp"
                 android:minHeight="2dp"
-                android:progress="0"
+                android:progress="42"
                 android:progressDrawable="@drawable/seek_bar_bg"
                 android:thumb="@drawable/seek_bar_thumb" />
         </LinearLayout>

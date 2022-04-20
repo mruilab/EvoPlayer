@@ -7,8 +7,8 @@
 #include "opengl_render.h"
 #include "def_drawer_proxy_impl.h"
 
-GLPlayer::GLPlayer(JNIEnv *env, jstring path) {
-    m_video_decoder = new VideoDecoder(env, path);
+GLPlayer::GLPlayer(JNIEnv *env, jobject obj, jstring path) {
+    m_video_decoder = new VideoDecoder(env, obj, path);
 
     // OpenGL 渲染
     m_video_drawer = new VideoDrawer();
