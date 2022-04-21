@@ -25,6 +25,8 @@ public:
 
     void SetSurface(jobject surface);
 
+    void SetSurfaceSize(int width, int height);
+
     void PlayOrPause();
 
     void Release();

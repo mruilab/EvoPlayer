@@ -12,13 +12,15 @@ class EvoPlayer {
 
     external fun createPlayer(videoPath: String, surface: Surface): Long
 
-    external fun play(player: Long);
+    external fun play(player: Long)
 
     external fun createGLPlayer(videoPath: String, surface: Surface): Long
 
-    external fun playOrPause(player: Long);
+    external fun setSurfaceSize(player: Long, width: Int, height: Int)
 
-    external fun stop(player: Long);
+    external fun playOrPause(player: Long)
+
+    external fun stop(player: Long)
 
     companion object {
         init {

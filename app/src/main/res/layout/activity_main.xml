@@ -8,6 +8,6 @@
         android:id="@+id/ff_gl_player"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="FFmpeg+OpenGL播放视频" />
+        android:text="FFmpeg+OpenGL视频播放" />
 
 </LinearLayout>

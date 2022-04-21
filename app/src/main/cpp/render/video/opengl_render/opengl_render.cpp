@@ -168,6 +168,10 @@ void OpenGLRender::SetSurface(jobject surface) {
     }
 }
 
+void OpenGLRender::SetSurfaceSize(int width, int height) {
+    m_drawer_proxy->SetDisplaySize(width, height);
+}
+
 void OpenGLRender::SetOffScreenSize(int width, int height) {
     m_window_width = width;
     m_window_height = height;

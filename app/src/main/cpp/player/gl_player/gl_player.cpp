@@ -31,6 +31,10 @@ void GLPlayer::SetSurface(jobject surface) {
     m_gl_render->SetSurface(surface);
 }
 
+void GLPlayer::SetSurfaceSize(int width, int height) {
+    m_gl_render->SetSurfaceSize(width, height);
+}
+
 void GLPlayer::PlayOrPause() {
     if (!m_video_decoder->IsRunning()) {
         LOGI("Player", "播放视频")

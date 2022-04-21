@@ -39,7 +39,7 @@ private:
             1.0f, -1.0f
     };
 
-    glm::mat4 m_transform = glm::mat4(1.0f);
+    glm::mat4 m_transform;
 
     float *m_matrix = NULL;
 
@@ -64,6 +64,8 @@ private:
     int m_display_width = 0;
 
     int m_display_height = 0;
+
+    bool m_display_size_change = false;
 
     void CreateTextureId();
 

@@ -2,11 +2,13 @@ package com.mruilab.evoplayer
 
 import android.app.Activity
 import android.os.Bundle
+import android.util.Log
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import com.mruilab.evoplayer.utils.Constants
 
 class FFGLPlayerActivity : Activity(), SurfaceHolder.Callback {
+    private val TAG = FFGLPlayerActivity::class.java.simpleName
 
     private var mVideoPath = Constants.DEFAULT_VIDEO_PATH
 
@@ -36,8 +38,13 @@ class FFGLPlayerActivity : Activity(), SurfaceHolder.Callback {
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+        Log.i(TAG, "surfaceChanged width:$width height:$height")
+        if (mPlayerID != null) {
+            mPlayer.setSurfaceSize(mPlayerID!!, width, height)
+        }
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
     }
+
 }

@@ -89,6 +89,8 @@ public:
 
     void SetSurface(jobject surface);
 
+    void SetSurfaceSize(int width, int height);
+
     void SetOffScreenSize(int width, int height);
 
     void RequestRgbaData();

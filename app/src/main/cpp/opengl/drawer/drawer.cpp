@@ -22,8 +22,12 @@ void Drawer::SetVideoSize(int width, int height) {
 }
 
 void Drawer::SetDisplaySize(int width, int height) {
-    this->m_display_width = width;
-    this->m_display_height = height;
+    if (this->m_display_width != width ||
+        this->m_display_width != height) {
+        this->m_display_width = width;
+        this->m_display_height = height;
+        m_display_size_change = true;
+    }
 }
 
 void Drawer::SetTextureNum(int num) {
@@ -56,18 +60,19 @@ void Drawer::CreateTextureId() {
 }
 
 void Drawer::UpdateMVPMatrix() {
-    if (m_matrix != NULL)return;
+    if (m_matrix != NULL && !m_display_size_change)return;
     int dstWidth = m_display_width;
     int dstHeight = dstWidth * m_origin_height / m_origin_width;
     if (dstHeight > m_display_height) {
         dstWidth = m_display_height * m_origin_width / m_origin_height;
         float scale = (float) dstWidth / m_display_width;
-        m_transform = glm::scale(m_transform, glm::vec3(scale, 1, 1));
+        m_transform = glm::scale(glm::mat4(1.0f), glm::vec3(scale, 1, 1));
     } else {
         float scale = (float) dstHeight / m_display_height;
-        m_transform = glm::scale(m_transform, glm::vec3(1, scale, 1));
+        m_transform = glm::scale(glm::mat4(1.0f), glm::vec3(1, scale, 1));
     }
     m_matrix = glm::value_ptr(m_transform);
+    m_display_size_change = false;
 }
 
 void Drawer::CreateProgram() {

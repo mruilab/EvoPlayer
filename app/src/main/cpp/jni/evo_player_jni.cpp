@@ -104,6 +104,11 @@ long create_gl_player(JNIEnv *env, jobject obj, jstring video_path, jobject surf
     return (uintptr_t) player;
 }
 
+void set_surface_size(JNIEnv *env, jobject obj, jlong player, jint width, jint height) {
+    GLPlayer *p = (GLPlayer *) player;
+    p->SetSurfaceSize(width, height);
+}
+
 void play_or_pause(JNIEnv *env, jobject obj, jlong player) {
     GLPlayer *p = (GLPlayer *) player;
     p->PlayOrPause();
@@ -124,6 +129,7 @@ JNINativeMethod methods[] = {
         {"createPlayer",     "(Ljava/lang/String;Landroid/view/Surface;)J", (void *) create_player},
         {"play",             "(J)V",                                        (void *) play},
         {"createGLPlayer",   "(Ljava/lang/String;Landroid/view/Surface;)J", (void *) create_gl_player},
+        {"setSurfaceSize",   "(JII)V",                                      (void *) set_surface_size},
         {"playOrPause",      "(J)V",                                        (void *) play_or_pause},
         {"stop",             "(J)V",                                        (void *) stop},
 };
