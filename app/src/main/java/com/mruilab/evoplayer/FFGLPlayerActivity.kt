@@ -45,6 +45,9 @@ class FFGLPlayerActivity : Activity(), SurfaceHolder.Callback {
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
+        if (mPlayerID != null) {
+            mPlayer.stop(mPlayerID!!)
+        }
     }
 
 }
