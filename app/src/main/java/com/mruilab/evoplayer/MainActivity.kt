@@ -1,68 +1,77 @@
 package com.mruilab.evoplayer
 
 import android.Manifest
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.media.MediaMetadataRetriever
+import android.net.Uri
 import android.os.Bundle
-import android.text.method.ScrollingMovementMethod
-import android.view.SurfaceHolder
-import android.view.SurfaceView
 import android.view.View
-import android.widget.TextView
+import android.widget.Button
+import android.widget.Toast
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.appcompat.app.AppCompatActivity
+import com.mruilab.evoplayer.utils.Uri2PathUtils
 import pub.devrel.easypermissions.EasyPermissions
+import java.io.File
 
-class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
-    lateinit var mSurfaceView: SurfaceView
-    lateinit var mPlayer: EvoPlayer
-    private var player: Long? = null
+class MainActivity : AppCompatActivity(), View.OnClickListener,
+    EasyPermissions.PermissionCallbacks {
 
-    private val videoPath = "/sdcard/av/cheerios.mp4"
+    private var hasStoragePermissions: Boolean = false
 
-    private var hasPermissions: Boolean = false
-    private val RC_READ_EXTERNAL_STORAGE = 1000
+    lateinit var mJumpToActivity: Class<*>
+
+    private val mLauncher =
+        registerForActivityResult(StartActivityForResult()) { result: ActivityResult ->
+            if (result.resultCode != Activity.RESULT_OK || result.data == null) {
+                return@registerForActivityResult
+            }
+            val uri = result.data!!.data ?: return@registerForActivityResult
+            val videoPath = Uri2PathUtils.getRealPathFromUri(this, uri);
+            if (!checkIsVideo(this, videoPath)) {
+                Toast.makeText(this, "请选择正确的视频文件", Toast.LENGTH_SHORT).show()
+                return@registerForActivityResult
+            }
+            val intent = Intent(this, mJumpToActivity).apply {
+                putExtra("video_path", videoPath)
+            }
+            startActivity(intent)
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
         checkPermissions()
-
-        mPlayer = EvoPlayer()
-        val textView: TextView = findViewById(R.id.ffmpeg_version_text)
-        textView.movementMethod = ScrollingMovementMethod.getInstance()
-        textView.text = mPlayer.getFFmpegVersion()
-
-        mPlayer.getCodecSupport()
-
-        mSurfaceView = findViewById(R.id.surface_view)
-        initSurfaceView()
-
+        setClickListeners()
     }
 
-    private fun initSurfaceView() {
-        mSurfaceView.holder.addCallback(object : SurfaceHolder.Callback {
-            override fun surfaceCreated(holder: SurfaceHolder) {
-                if (player == null && hasPermissions) {
-                    player = mPlayer.createGLPlayer(videoPath, holder.surface);
-                }
-            }
-
-            override fun surfaceChanged(
-                holder: SurfaceHolder, format: Int, width: Int, height: Int
-            ) {
-
-            }
-
-            override fun surfaceDestroyed(holder: SurfaceHolder) {
-            }
-
-        })
+    private fun setClickListeners() {
+        findViewById<Button>(R.id.ff_gl_player).setOnClickListener(this)
     }
 
-    fun onPlayClick(view: View) {
-//        Thread(Runnable {
-//            mPlayer.playVideo(videoPath, mSurfaceView.holder.surface)
-//        }).start()
-        if (hasPermissions)
-            mPlayer.playOrPause(player!!)
+    override fun onClick(view: View) {
+        when (view.id) {
+            R.id.ff_gl_player -> {
+                openDocument(FFGLPlayerActivity::class.java)
+            }
+        }
+    }
+
+    private fun openDocument(activity: Class<*>) {
+        if (hasStoragePermissions) {
+            mJumpToActivity = activity
+            val docIntent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "video/*"
+            }
+            mLauncher.launch(docIntent)
+        } else {
+            checkPermissions()
+        }
     }
 
     private fun checkPermissions() {
@@ -71,11 +80,11 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
             EasyPermissions.requestPermissions(
                 this,
                 "是否允许\"EvoPlayer\"访问您设备上的照片、媒体内容和文件？",
-                RC_READ_EXTERNAL_STORAGE,
+                1001,
                 *perms
             )
         } else {
-            hasPermissions = true
+            hasStoragePermissions = true
         }
     }
 
@@ -89,12 +98,29 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
     }
 
     override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>) {
-        if (requestCode == RC_READ_EXTERNAL_STORAGE && player == null) {
-            hasPermissions = true
-            player = mPlayer.createGLPlayer(videoPath, mSurfaceView.holder.surface);
-        }
+        if (requestCode == 1001)
+            hasStoragePermissions = true
     }
 
     override fun onPermissionsDenied(requestCode: Int, perms: MutableList<String>) {
     }
+
+    /**
+     * 校验文件是否是视频
+     *
+     * @param path String
+     * @return Boolean
+     */
+    private fun checkIsVideo(context: Context, path: String): Boolean {
+        val retriever = MediaMetadataRetriever()
+        try {
+            retriever.setDataSource(context, Uri.fromFile(File(path)))
+            val hasVideo = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO)
+            return "yes" == hasVideo
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return false
+    }
+
 }
