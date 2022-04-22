@@ -14,13 +14,11 @@ void NativeWindowPlayer::playVideo(const char *input_str, ANativeWindow *nativeW
         m_AVFormatContext = avformat_alloc_context();
 
         //2.打开输入文件，解封装
-        char buf[1024];
         int err_code = avformat_open_input(&m_AVFormatContext, input_str, NULL, NULL);
         if (err_code != 0) {
-            av_strerror(err_code, buf, 1024);
             LOGE(TAG, "avformat_open_input fail. %s: %d(%s)", input_str,
                  err_code,
-                 buf);
+                 av_err2str(err_code));
             break;
         }
 
@@ -47,8 +45,13 @@ void NativeWindowPlayer::playVideo(const char *input_str, ANativeWindow *nativeW
         AVCodecParameters *codecParameters = m_AVFormatContext->streams[m_StreamIndex]->codecpar;
 
         //6.根据 codec_id 获取解码器
+        //硬解码
+        if (codecParameters->codec_id == AV_CODEC_ID_H264) {
+            m_AVCodec = avcodec_find_decoder_by_name("h264_mediacodec");
+        } else if (codecParameters->codec_id == AV_CODEC_ID_HEVC) {
+            m_AVCodec = avcodec_find_decoder_by_name("hevc_mediacodec");
+        }
 //        m_AVCodec = avcodec_find_decoder(codecParameters->codec_id);
-        m_AVCodec = avcodec_find_decoder_by_name("h264_mediacodec"); //硬解码
         if (m_AVCodec == nullptr) {
             LOGE(TAG, "avcodec_find_decoder fail.");
             break;
@@ -174,6 +177,7 @@ void NativeWindowPlayer::playVideo(const char *input_str, ANativeWindow *nativeW
 
 void NativeWindowPlayer::renderFrame() {
     while (avcodec_receive_frame(m_AVCodecContext, m_AVFrame) == 0) {
+        LOGE(TAG, "avcodec_send_packet avcodec_receive_frame ")
         // 获取到m_AVFrame解码数据，在这里进行格式转换，然后进行渲染
         sws_scale(m_SwsContext, m_AVFrame->data, m_AVFrame->linesize, 0,
                   m_VideoHeight, m_RGBFrame->data, m_RGBFrame->linesize);
@@ -192,4 +196,5 @@ void NativeWindowPlayer::renderFrame() {
             ANativeWindow_unlockAndPost(m_NativeWindow);
         }
     }
+    av_frame_unref(m_AVFrame);
 }

@@ -5,6 +5,7 @@
 
 #include "base_decoder.h"
 #include "timer.c"
+#include <unistd.h>
 
 BaseDecoder::BaseDecoder(JNIEnv *env, jstring path, bool for_synthesizer)
         : m_for_synthesizer(for_synthesizer) {
@@ -89,6 +90,7 @@ void BaseDecoder::InitFFMpegDecoder(JNIEnv *env) {
     AVCodecParameters *codecPar = m_format_ctx->streams[streamIndex]->codecpar;
 
     //4.3 获取解码器
+    //硬解码
     if (codecPar->codec_id == AV_CODEC_ID_H264) {
         m_codec = avcodec_find_decoder_by_name("h264_mediacodec");
     } else if (codecPar->codec_id == AV_CODEC_ID_HEVC) {
@@ -109,6 +111,13 @@ void BaseDecoder::InitFFMpegDecoder(JNIEnv *env) {
         DoneDecode(env);
         return;
     }
+
+//    // 获取CPU核心数(包含禁用的)
+//    long cup_num_all = sysconf(_SC_NPROCESSORS_CONF);
+//    // 获取可用的CPU核心数
+//    long cup_num_enable = sysconf(_SC_NPROCESSORS_ONLN);
+//    LOG_INFO(TAG, LogSpec(), "cpu number all:%ld enable:%ld", cup_num_all, cup_num_enable);
+//    m_codec_ctx->thread_count = cup_num_enable + 1;
 
     //5、打开解码器
     if (avcodec_open2(m_codec_ctx, m_codec, NULL) < 0) {

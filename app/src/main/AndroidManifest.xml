@@ -24,6 +24,10 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".FFmpegPlayerActivity"
+            android:configChanges="orientation|screenSize"
+            android:exported="true" />
+        <activity
             android:name=".FFGLPlayerActivity"
             android:configChanges="orientation|screenSize"
             android:exported="true" />
