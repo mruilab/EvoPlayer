@@ -61,7 +61,6 @@ void VideoDecoder::InitSws() {
 }
 
 void VideoDecoder::Render(AVFrame *frame) {
-    LOGI(TAG, "decode frame id: %d", ++m_frame_id);
     if (m_dst_frame == NULL) {
         if (frame->format == AV_PIX_FMT_NV12 ||
             frame->format == AV_PIX_FMT_NV21)
@@ -103,6 +102,7 @@ void VideoDecoder::Render(AVFrame *frame) {
             Wait(0, 200);
         }
     }
+    LOGI(TAG, "decode frame id: %d timestamp: %ld", ++m_frame_id, frame->best_effort_timestamp);
 }
 
 bool VideoDecoder::NeedLoopDecode() {

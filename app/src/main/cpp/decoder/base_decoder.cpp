@@ -186,15 +186,22 @@ void BaseDecoder::LoopDecode() {
 }
 
 AVFrame *BaseDecoder::DecodeOneFrame() {
-    int ret = hw_read_packet ? av_read_frame(m_format_ctx, m_packet) : 0;
-    while (ret == 0) {
+    if (hw_read_packet)av_read_frame(m_format_ctx, m_packet);
+    while (true) {
         if (m_packet->stream_index == m_stream_index) {
             start_decode_time = GetCurMsTime();
             switch (avcodec_send_packet(m_codec_ctx, m_packet)) {
                 case AVERROR_EOF:
-                    av_packet_unref(m_packet);
+                    hw_read_packet = false;
+                    /**
+                     * 参考ffmpeg avcodec.h第130行注释
+                     * 对解码器执行flushing操作，获取解码器缓存的packets
+                     */
+                    m_packet->data = NULL;
+                    m_packet->size = 0;
+                    avcodec_send_packet(m_codec_ctx, m_packet);
                     LOG_ERROR(TAG, LogSpec(), "Decode error: %s", av_err2str(AVERROR_EOF));
-                    return NULL; // 解码结束
+                    break;
                 case AVERROR(EAGAIN):
                     hw_read_packet = false;
                     LOG_ERROR(TAG, LogSpec(), "Decode error: %s", av_err2str(AVERROR(EAGAIN)));
@@ -211,20 +218,22 @@ AVFrame *BaseDecoder::DecodeOneFrame() {
             }
             LOG_INFO(TAG, LogSpec(), "decode frame time: %ldms",
                      GetCurMsTime() - start_decode_time)
-            while (avcodec_receive_frame(m_codec_ctx, m_frame) == 0) {
+            int ret = avcodec_receive_frame(m_codec_ctx, m_frame);
+            if (ret == 0) {
                 ObtainTimeStamp();
                 return m_frame;
+            } else if (ret == AVERROR_EOF) {
+                LOGI(TAG, "ret = %s", av_err2str(ret))
+                av_packet_unref(m_packet);
+                return NULL;
             }
         }
         if (hw_read_packet) {
             // 释放packet
             av_packet_unref(m_packet);
-            ret = av_read_frame(m_format_ctx, m_packet);
+            av_read_frame(m_format_ctx, m_packet);
         }
     }
-    av_packet_unref(m_packet);
-    LOGI(TAG, "ret = %s", av_err2str(ret))
-    return NULL;
 }
 
 void BaseDecoder::CallbackState(DecodeState state) {
