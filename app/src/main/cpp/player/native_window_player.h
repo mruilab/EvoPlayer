@@ -49,7 +49,6 @@ private:
     // 开始解码的时间戳，用于计算解码耗时
     int64_t startDecodeTime;
 
-
 };
 
 #endif //EVOPLAYER_NATIVE_WINDOW_PLAYER_H
