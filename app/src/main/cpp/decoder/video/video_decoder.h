@@ -17,6 +17,7 @@ class VideoDecoder : public BaseDecoder {
 private:
     const char *TAG = "VideoDecoder";
 
+    int m_frame_id = 0;
     /**
      * 渲染时用到AVFrame，存放于OneFrame中，
      * 根据DST_FORMAT将yuv转换为目标数据

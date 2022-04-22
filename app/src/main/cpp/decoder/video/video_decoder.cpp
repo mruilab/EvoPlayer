@@ -61,6 +61,7 @@ void VideoDecoder::InitSws() {
 }
 
 void VideoDecoder::Render(AVFrame *frame) {
+    LOGI(TAG, "decode frame id: %d", ++m_frame_id);
     if (m_dst_frame == NULL) {
         if (frame->format == AV_PIX_FMT_NV12 ||
             frame->format == AV_PIX_FMT_NV21)
@@ -110,6 +111,7 @@ bool VideoDecoder::NeedLoopDecode() {
 
 void VideoDecoder::Release() {
     LOG_INFO(TAG, LogSpec(), "[VIDEO] release")
+    m_frame_id = 0;
     if (m_dst_frame != NULL) {
         av_frame_free(&m_dst_frame);
         m_dst_frame = NULL;

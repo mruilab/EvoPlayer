@@ -177,7 +177,6 @@ void NativeWindowPlayer::playVideo(const char *input_str, ANativeWindow *nativeW
 
 void NativeWindowPlayer::renderFrame() {
     while (avcodec_receive_frame(m_AVCodecContext, m_AVFrame) == 0) {
-        LOGE(TAG, "avcodec_send_packet avcodec_receive_frame ")
         // 获取到m_AVFrame解码数据，在这里进行格式转换，然后进行渲染
         sws_scale(m_SwsContext, m_AVFrame->data, m_AVFrame->linesize, 0,
                   m_VideoHeight, m_RGBFrame->data, m_RGBFrame->linesize);
