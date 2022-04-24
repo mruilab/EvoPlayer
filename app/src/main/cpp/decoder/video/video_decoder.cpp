@@ -112,10 +112,6 @@ bool VideoDecoder::NeedLoopDecode() {
 void VideoDecoder::Release() {
     LOG_INFO(TAG, LogSpec(), "[VIDEO] release")
     m_frame_id = 0;
-    if (m_dst_frame != NULL) {
-        av_frame_free(&m_dst_frame);
-        m_dst_frame = NULL;
-    }
     if (m_buf_for_dst_frame != NULL) {
         free(m_buf_for_dst_frame);
         m_buf_for_dst_frame = NULL;
