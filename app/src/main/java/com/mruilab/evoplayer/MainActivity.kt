@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener,
                 return@registerForActivityResult
             }
             val uri = result.data!!.data ?: return@registerForActivityResult
-            val videoPath = Uri2PathUtils.getRealPathFromUri(this, uri);
+            val videoPath = Uri2PathUtils.getRealPathFromUri(this, uri)
             if (!checkIsVideo(this, videoPath)) {
                 Toast.makeText(this, "请选择正确的视频文件", Toast.LENGTH_SHORT).show()
                 return@registerForActivityResult

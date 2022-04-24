@@ -47,16 +47,7 @@ const char *VideoDrawer::GetVertexShader() {
 }
 
 const char *VideoDrawer::GetFragmentShader() {
-    switch (m_frame->format) {
-        case AV_PIX_FMT_YUV420P:
-            return i420_fragment_shader();
-        case AV_PIX_FMT_NV12:
-            return nv12_fragment_shader();
-        case AV_PIX_FMT_NV21:
-            return nv21_fragment_shader();
-        default:
-            return rgba_fragment_shader();
-    }
+    return default_fragment_shader();
 }
 
 void VideoDrawer::InitCstShaderHandler() {
@@ -68,16 +59,23 @@ void VideoDrawer::BindTexture() {
     switch (m_frame->format) {
         case AV_PIX_FMT_RGBA:
             ActivateTexture();
+            glUniform1i(3, IMAGE_FORMAT_RGBA);
             break;
         case AV_PIX_FMT_YUV420P:
             ActivateTexture(0, GL_TEXTURE_2D);
             ActivateTexture(1, GL_TEXTURE_2D);
             ActivateTexture(2, GL_TEXTURE_2D);
+            glUniform1i(3, IMAGE_FORMAT_I420);
             break;
-        case AV_PIX_FMT_NV12:
         case AV_PIX_FMT_NV21:
             ActivateTexture(0, GL_TEXTURE_2D);
             ActivateTexture(1, GL_TEXTURE_2D);
+            glUniform1i(3, IMAGE_FORMAT_NV21);
+            break;
+        case AV_PIX_FMT_NV12:
+            ActivateTexture(0, GL_TEXTURE_2D);
+            ActivateTexture(1, GL_TEXTURE_2D);
+            glUniform1i(3, IMAGE_FORMAT_NV12);
             break;
     }
 }
@@ -111,8 +109,8 @@ void VideoDrawer::PrepareDraw() {
                          GL_UNSIGNED_BYTE,
                          m_frame->data[2]);
             break;
-        case AV_PIX_FMT_NV12:
         case AV_PIX_FMT_NV21:
+        case AV_PIX_FMT_NV12:
             glActiveTexture(GL_TEXTURE0);
             glTexImage2D(GL_TEXTURE_2D, 0,
                          GL_LUMINANCE,
