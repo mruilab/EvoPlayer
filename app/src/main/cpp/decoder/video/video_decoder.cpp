@@ -10,7 +10,7 @@ VideoDecoder::VideoDecoder(JNIEnv *env, jstring path, bool for_synthesizer)
         : BaseDecoder(env, path, for_synthesizer) {
 }
 
-VideoDecoder::~VideoDecoder() noexcept {
+VideoDecoder::~VideoDecoder() {
     delete m_video_render;
 }
 

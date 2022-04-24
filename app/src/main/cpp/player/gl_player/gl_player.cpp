@@ -3,7 +3,6 @@
 //
 
 #include "gl_player.h"
-#include "native_render.h"
 #include "opengl_render.h"
 #include "def_drawer_proxy_impl.h"
 

@@ -5,7 +5,7 @@
 
 #include "base_decoder.h"
 #include "timer.c"
-#include <unistd.h>
+//#include <unistd.h>
 
 BaseDecoder::BaseDecoder(JNIEnv *env, jstring path, bool for_synthesizer)
         : m_for_synthesizer(for_synthesizer) {
@@ -186,7 +186,10 @@ void BaseDecoder::LoopDecode() {
 }
 
 AVFrame *BaseDecoder::DecodeOneFrame() {
-    if (hw_read_packet)av_read_frame(m_format_ctx, m_packet);
+    if (hw_read_packet) {
+        av_packet_unref(m_packet);
+        av_read_frame(m_format_ctx, m_packet);
+    }
     while (true) {
         if (m_packet->stream_index == m_stream_index) {
             start_decode_time = GetCurMsTime();

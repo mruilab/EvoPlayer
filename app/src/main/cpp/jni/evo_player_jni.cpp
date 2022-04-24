@@ -151,7 +151,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
         return -1;
     }
     // 将 JavaVM 设置给 FFmpeg
-    av_jni_set_java_vm(vm, 0);
+    av_jni_set_java_vm(vm, reserved);
     return JNI_VERSION_1_6;
 }
 
