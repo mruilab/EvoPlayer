@@ -61,6 +61,7 @@ void Drawer::CreateTextureId() {
 
 void Drawer::UpdateMVPMatrix() {
     if (m_matrix != NULL && !m_display_size_change)return;
+    m_transform = glm::mat4(1.0f);
     int dstWidth = m_display_width;
     int dstHeight = dstWidth * m_origin_height / m_origin_width;
     if (dstHeight > m_display_height) {
