@@ -17,7 +17,9 @@ include_directories(
         glm
         ${CMAKE_SOURCE_DIR}/common
         ${CMAKE_SOURCE_DIR}/decoder
+        ${CMAKE_SOURCE_DIR}/decoder/audio
         ${CMAKE_SOURCE_DIR}/decoder/video
+        ${CMAKE_SOURCE_DIR}/frame
         ${CMAKE_SOURCE_DIR}/jni
         ${CMAKE_SOURCE_DIR}/opengl/drawer
         ${CMAKE_SOURCE_DIR}/opengl/drawer/proxy
@@ -25,6 +27,7 @@ include_directories(
         ${CMAKE_SOURCE_DIR}/player
         ${CMAKE_SOURCE_DIR}/player/def_player
         ${CMAKE_SOURCE_DIR}/player/gl_player
+        ${CMAKE_SOURCE_DIR}/render/audio
         ${CMAKE_SOURCE_DIR}/render/video
         ${CMAKE_SOURCE_DIR}/render/video/native_render
         ${CMAKE_SOURCE_DIR}/render/video/opengl_render
@@ -42,7 +45,9 @@ file(GLOB src-files
         ${CMAKE_SOURCE_DIR}/*.cpp
         ${CMAKE_SOURCE_DIR}/common/*.h
         ${CMAKE_SOURCE_DIR}/decoder/*.cpp
+        ${CMAKE_SOURCE_DIR}/decoder/audio/*.cpp
         ${CMAKE_SOURCE_DIR}/decoder/video/*.cpp
+        ${CMAKE_SOURCE_DIR}/frame/*.h
         ${CMAKE_SOURCE_DIR}/jni/*.cpp
         ${CMAKE_SOURCE_DIR}/opengl/drawer/*.cpp
         ${CMAKE_SOURCE_DIR}/opengl/drawer/proxy/*.cpp
@@ -50,13 +55,14 @@ file(GLOB src-files
         ${CMAKE_SOURCE_DIR}/player/*.cpp
         ${CMAKE_SOURCE_DIR}/player/def_player/*.cpp
         ${CMAKE_SOURCE_DIR}/player/gl_player/*.cpp
+        ${CMAKE_SOURCE_DIR}/render/audio/*.cpp
         ${CMAKE_SOURCE_DIR}/render/video/*.h
         ${CMAKE_SOURCE_DIR}/render/video/native_render/*.cpp
         ${CMAKE_SOURCE_DIR}/render/video/opengl_render/*.cpp
         ${CMAKE_SOURCE_DIR}/shader/*.h
         ${CMAKE_SOURCE_DIR}/shader/fragment/*.cpp
         ${CMAKE_SOURCE_DIR}/shader/vertex/*.cpp
-        ${CMAKE_SOURCE_DIR}/utils/*.c)
+        ${CMAKE_SOURCE_DIR}/utils/*.h)
 
 # Creates and names a library, sets it as either STATIC
 # or SHARED, and provides the relative paths to its source code.

@@ -9,6 +9,7 @@
 #include "drawer_proxy.h"
 #include "opengl_render.h"
 #include "video_drawer.h"
+#include "audio_decoder.h"
 
 class GLPlayer {
 private:
@@ -17,6 +18,9 @@ private:
 
     DrawerProxy *m_video_drawer_proxy;
     VideoDrawer *m_video_drawer;
+
+    AudioDecoder *m_audio_decoder;
+    AudioRender *m_audio_render;
 
 public:
     GLPlayer(JNIEnv *env, jstring path);

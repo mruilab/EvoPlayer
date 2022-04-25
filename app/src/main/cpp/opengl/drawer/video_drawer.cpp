@@ -19,8 +19,8 @@ void VideoDrawer::InitRender(JNIEnv *env, int video_width, int video_height, int
     dst_size[1] = video_height;
 }
 
-void VideoDrawer::Render(OneFrame *one_frame) {
-    m_frame = one_frame->frame;
+void VideoDrawer::Render(VideoFrame *video_frame) {
+    m_frame = video_frame->frame;
     switch (m_frame->format) {
         case AV_PIX_FMT_YUV420P:
             SetTextureNum(3);

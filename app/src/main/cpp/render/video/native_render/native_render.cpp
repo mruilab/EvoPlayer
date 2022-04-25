@@ -36,18 +36,18 @@ void NativeRender::InitRender(JNIEnv *env, int video_width, int video_height, in
     dts_size[1] = m_dst_h;
 }
 
-void NativeRender::Render(OneFrame *one_frame) {
+void NativeRender::Render(VideoFrame *video_frame) {
     LOGI(TAG, "current render frame id: %d", ++frame_id);
     // 锁定窗口
     ANativeWindow_lock(m_native_window, &m_out_buffer, NULL);
     uint8_t *dst = (uint8_t *) m_out_buffer.bits;
     // 获取stride：一行可以保存的内存像素数量*4（即：rgba的位数）
     int dstStride = m_out_buffer.stride * 4;
-    int srcStride = one_frame->frame->linesize[0];
+    int srcStride = video_frame->frame->linesize[0];
 
     // 由于window的stride和帧的stride不同，因此需要逐行复制
     for (int h = 0; h < m_dst_h; h++) {
-        memcpy(dst + h * dstStride, one_frame->frame->data[0] + h * srcStride, srcStride);
+        memcpy(dst + h * dstStride, video_frame->frame->data[0] + h * srcStride, srcStride);
     }
     //释放窗口
     ANativeWindow_unlockAndPost(m_native_window);

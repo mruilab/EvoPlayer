@@ -22,7 +22,7 @@ public:
 
     void InitRender(JNIEnv *env, int video_width, int video_height, int *dst_size) override;
 
-    void Render(OneFrame *one_frame) override;
+    void Render(VideoFrame *video_frame) override;
 
     void ReleaseRender() override;
 

@@ -3,7 +3,6 @@
 //
 
 #include "video_decoder.h"
-#include "timer.h"
 #include "image_util.h"
 
 VideoDecoder::VideoDecoder(JNIEnv *env, jstring path, bool for_synthesizer)
@@ -94,11 +93,11 @@ void VideoDecoder::Render(AVFrame *frame) {
     // YUV420P->0, NV12->23, NV21->24, RGBA->26
     LOG_INFO(TAG, LogSpec(), "obtain dst_frame time: %ldms, src format: %d, dst format: %d",
              GetCurMsTime() - obtain_dst_frame_time, frame->format, m_dst_frame->format)
-    OneFrame *one_frame = new OneFrame(m_dst_frame, frame->pts, time_base(), NULL, false);
-    m_video_render->Render(one_frame);
+    VideoFrame *video_frame = new VideoFrame(m_dst_frame, frame->pts, time_base(), false);
+    m_video_render->Render(video_frame);
 
     if (m_state_cb != NULL) {
-        if (m_state_cb->DecodeOneFrame(this, one_frame)) {
+        if (m_state_cb->DecodeOneFrame(this, video_frame)) {
             Wait(0, 200);
         }
     }

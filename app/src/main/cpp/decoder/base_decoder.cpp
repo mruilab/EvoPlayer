@@ -4,7 +4,7 @@
 //
 
 #include "base_decoder.h"
-#include "timer.c"
+
 //#include <unistd.h>
 
 BaseDecoder::BaseDecoder(JNIEnv *env, jstring path, bool for_synthesizer)
@@ -91,12 +91,15 @@ void BaseDecoder::InitFFMpegDecoder(JNIEnv *env) {
 
     //4.3 获取解码器
     //硬解码
-    if (codecPar->codec_id == AV_CODEC_ID_H264) {
-        m_codec = avcodec_find_decoder_by_name("h264_mediacodec");
-    } else if (codecPar->codec_id == AV_CODEC_ID_HEVC) {
-        m_codec = avcodec_find_decoder_by_name("hevc_mediacodec");
+    if (GetMediaType() == AVMEDIA_TYPE_VIDEO) {
+        if (codecPar->codec_id == AV_CODEC_ID_H264) {
+            m_codec = avcodec_find_decoder_by_name("h264_mediacodec");
+        } else if (codecPar->codec_id == AV_CODEC_ID_HEVC) {
+            m_codec = avcodec_find_decoder_by_name("hevc_mediacodec");
+        }
+    } else if (GetMediaType() == AVMEDIA_TYPE_AUDIO) {
+        m_codec = avcodec_find_decoder(codecPar->codec_id);
     }
-//    m_codec = avcodec_find_decoder(codecPar->codec_id);
 
     if (m_codec == NULL) {
         LOG_ERROR(TAG, LogSpec(), "codec not found.")

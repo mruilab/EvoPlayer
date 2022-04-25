@@ -19,7 +19,7 @@ private:
 
     int m_frame_id = 0;
     /**
-     * 渲染时用到AVFrame，存放于OneFrame中，
+     * 渲染时用到AVFrame，存放于VideoFrame中，
      * 根据DST_FORMAT将yuv转换为目标数据
      */
     AVFrame *m_dst_frame = NULL;

@@ -5,6 +5,7 @@
 #include "gl_player.h"
 #include "opengl_render.h"
 #include "def_drawer_proxy_impl.h"
+#include "opensl_render.h"
 
 GLPlayer::GLPlayer(JNIEnv *env, jstring path) {
     m_video_decoder = new VideoDecoder(env, path);
@@ -19,6 +20,11 @@ GLPlayer::GLPlayer(JNIEnv *env, jstring path) {
     m_video_drawer_proxy = proxyImpl;
 
     m_gl_render = new OpenGLRender(env, m_video_drawer_proxy);
+
+    // 音频解码
+    m_audio_decoder = new AudioDecoder(env, path, false);
+    m_audio_render = new OpenSLRender();
+    m_audio_decoder->SetRender(m_audio_render);
 }
 
 GLPlayer::~GLPlayer() {
@@ -42,9 +48,17 @@ void GLPlayer::PlayOrPause() {
         LOGI("Player", "暂停视频")
         m_video_decoder->Pause();
     }
+    if (!m_audio_decoder->IsRunning()) {
+        LOGI("Player", "播放音频")
+        m_audio_decoder->GoOn();
+    } else {
+        LOGI("Player", "暂停音频")
+        m_audio_decoder->Pause();
+    }
 }
 
 void GLPlayer::Release() {
     m_gl_render->Stop();
     m_video_decoder->Stop();
+    m_audio_decoder->Stop();
 }

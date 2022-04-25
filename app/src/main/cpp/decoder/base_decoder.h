@@ -10,6 +10,7 @@
 #include <jni.h>
 #include <thread>
 #include "logger.h"
+#include "timer.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
