@@ -88,7 +88,7 @@ private:
     }
 
 public:
-    AudioDecoder(JNIEnv *env, const jstring path, bool forSynthesizer);
+    AudioDecoder(bool forSynthesizer = false);
 
     ~AudioDecoder();
 

@@ -5,8 +5,7 @@
 #include "video_decoder.h"
 #include "image_util.h"
 
-VideoDecoder::VideoDecoder(JNIEnv *env, jstring path, bool for_synthesizer)
-        : BaseDecoder(env, path, for_synthesizer) {
+VideoDecoder::VideoDecoder(bool for_synthesizer) : BaseDecoder(for_synthesizer) {
 }
 
 VideoDecoder::~VideoDecoder() {

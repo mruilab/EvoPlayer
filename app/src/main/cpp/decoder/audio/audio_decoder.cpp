@@ -3,11 +3,9 @@
 //
 
 #include "audio_decoder.h"
-#include "../../frame/audio_frame.h"
+#include "audio_frame.h"
 
-AudioDecoder::AudioDecoder(JNIEnv *env, const jstring path, bool forSynthesizer) : BaseDecoder(
-        env, path, forSynthesizer) {
-
+AudioDecoder::AudioDecoder(bool forSynthesizer) : BaseDecoder(forSynthesizer) {
 }
 
 AudioDecoder::~AudioDecoder() {

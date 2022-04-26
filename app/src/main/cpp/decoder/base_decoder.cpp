@@ -7,17 +7,7 @@
 
 //#include <unistd.h>
 
-BaseDecoder::BaseDecoder(JNIEnv *env, jstring path, bool for_synthesizer)
-        : m_for_synthesizer(for_synthesizer) {
-    Init(env, path);
-    CreateDecodeThread();
-}
-
-void BaseDecoder::Init(JNIEnv *env, jstring path) {
-    m_path_ref = env->NewGlobalRef(path);
-    m_path = env->GetStringUTFChars(path, NULL);
-    // 获取JVM虚拟机，为创建线程作准备
-    env->GetJavaVM(&m_jvm_for_thread);
+BaseDecoder::BaseDecoder(bool for_synthesizer) : m_for_synthesizer(for_synthesizer) {
 }
 
 BaseDecoder::~BaseDecoder() {
@@ -27,25 +17,52 @@ BaseDecoder::~BaseDecoder() {
     if (m_packet != NULL) delete m_packet;
 }
 
-void BaseDecoder::CreateDecodeThread() {
-    //使用智能指针，线程结束时，自动删除本类指针
-    std::shared_ptr<BaseDecoder> that(this);
-    std::thread t(Decode, that);
-    t.detach();
+int BaseDecoder::CreateDecoder(JNIEnv *env, jstring path) {
+    Init(env, path);
+    int ret = CreateDecodeThread();
+    return ret;
 }
 
-void BaseDecoder::Decode(std::shared_ptr<BaseDecoder> that) {
+void BaseDecoder::Init(JNIEnv *env, jstring path) {
+    m_path_ref = env->NewGlobalRef(path);
+    m_path = env->GetStringUTFChars(path, NULL);
+    // 获取JVM虚拟机，为创建线程作准备
+    env->GetJavaVM(&m_jvm_for_thread);
+}
+
+int BaseDecoder::CreateDecodeThread() {
+    // 使用智能指针，线程结束时，自动删除本类指针
+    std::shared_ptr<BaseDecoder> that(this);
+    // 通过获取线程的返回值，来判断Decode执行是否报错
+    std::promise<int> promise;
+    std::future<int> future = promise.get_future();
+    std::thread t(Decode, that, std::ref(promise));
+    t.detach();
+    return future.get();
+}
+
+void BaseDecoder::Decode(std::shared_ptr<BaseDecoder> that, std::promise<int> &promise) {
     JNIEnv *env;
 
     // 将线程附加到虚拟机，并获取env
     if (that->m_jvm_for_thread->AttachCurrentThread(&env, NULL) != JNI_OK) {
         LOG_ERROR(that->TAG, that->LogSpec(), "Fail to Init decode thread");
+        promise.set_value(-1);
         return;
     }
 
     that->CallbackState(PREPARE);
 
-    that->InitFFMpegDecoder(env);
+    if (that->InitFFMpegDecoder(env) != 0) {
+        LOG_ERROR(that->TAG, that->LogSpec(), "Decoder init fail");
+        promise.set_value(-1);
+        that->CallbackState(STOP);
+        that->m_jvm_for_thread->DetachCurrentThread();
+        return;
+    }
+
+    promise.set_value(0);
+
     that->AllocFrameBuffer();
     av_usleep(1000);
     that->Prepare(env);
@@ -58,21 +75,21 @@ void BaseDecoder::Decode(std::shared_ptr<BaseDecoder> that) {
     that->m_jvm_for_thread->DetachCurrentThread();
 }
 
-void BaseDecoder::InitFFMpegDecoder(JNIEnv *env) {
+int BaseDecoder::InitFFMpegDecoder(JNIEnv *env) {
     //1、初始化上下文
     m_format_ctx = avformat_alloc_context();
 
     //2、打开文件
     if (avformat_open_input(&m_format_ctx, m_path, NULL, NULL) != 0) {
         LOG_ERROR(TAG, LogSpec(), "Fail to open fail [%s]", m_path);
-        return;
+        return -1;
     }
 
     //3、获取音视频信息
     if (avformat_find_stream_info(m_format_ctx, NULL) < 0) {
         LOG_ERROR(TAG, LogSpec(), "Fail to find stream info");
         DoneDecode(env);
-        return;
+        return -1;
     }
 
     //4、查找编解码器
@@ -82,7 +99,7 @@ void BaseDecoder::InitFFMpegDecoder(JNIEnv *env) {
     if (streamIndex < 0) {
         LOG_ERROR(TAG, LogSpec(), "Fail to find stream index")
         DoneDecode(env);
-        return;
+        return -1;
     }
     m_stream_index = streamIndex;
 
@@ -104,7 +121,7 @@ void BaseDecoder::InitFFMpegDecoder(JNIEnv *env) {
     if (m_codec == NULL) {
         LOG_ERROR(TAG, LogSpec(), "codec not found.")
         DoneDecode(env);
-        return;
+        return -1;
     }
 
     //4.4 获取解码器上下文
@@ -112,7 +129,7 @@ void BaseDecoder::InitFFMpegDecoder(JNIEnv *env) {
     if (avcodec_parameters_to_context(m_codec_ctx, codecPar) != 0) {
         LOG_ERROR(TAG, LogSpec(), "Fail to obtain av codec context");
         DoneDecode(env);
-        return;
+        return -1;
     }
 
 //    // 获取CPU核心数(包含禁用的)
@@ -126,12 +143,13 @@ void BaseDecoder::InitFFMpegDecoder(JNIEnv *env) {
     if (avcodec_open2(m_codec_ctx, m_codec, NULL) < 0) {
         LOG_ERROR(TAG, LogSpec(), "Fail to open av codec");
         DoneDecode(env);
-        return;
+        return -1;
     }
 
     m_duration = (long) ((float) m_format_ctx->duration / AV_TIME_BASE * 1000);
 
     LOG_INFO(TAG, LogSpec(), "Decoder init success")
+    return 0;
 }
 
 void BaseDecoder::AllocFrameBuffer() {

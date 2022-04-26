@@ -57,7 +57,7 @@ private:
     void InitSws();
 
 public:
-    VideoDecoder(JNIEnv *env, jstring path, bool for_synthesizer = false);
+    VideoDecoder(bool for_synthesizer = false);
 
     ~VideoDecoder();
 

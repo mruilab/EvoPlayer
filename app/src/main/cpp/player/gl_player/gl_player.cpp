@@ -8,11 +8,12 @@
 #include "opensl_render.h"
 
 GLPlayer::GLPlayer(JNIEnv *env, jstring path) {
-    m_video_decoder = new VideoDecoder(env, path);
+    m_video_decoder = new VideoDecoder();
 
     // OpenGL 渲染
     m_video_drawer = new VideoDrawer();
     m_video_decoder->SetRender(m_video_drawer);
+    m_video_create_ret = m_video_decoder->CreateDecoder(env, path);
 
     DefDrawerProxyImpl *proxyImpl = new DefDrawerProxyImpl();
     proxyImpl->AddDrawer(m_video_drawer);
@@ -22,7 +23,8 @@ GLPlayer::GLPlayer(JNIEnv *env, jstring path) {
     m_gl_render = new OpenGLRender(env, m_video_drawer_proxy);
 
     // 音频解码
-    m_audio_decoder = new AudioDecoder(env, path, false);
+    m_audio_decoder = new AudioDecoder();
+    m_audio_create_ret = m_audio_decoder->CreateDecoder(env, path);
     m_audio_render = new OpenSLRender();
     m_audio_decoder->SetRender(m_audio_render);
 }
@@ -59,6 +61,8 @@ void GLPlayer::PlayOrPause() {
 
 void GLPlayer::Release() {
     m_gl_render->Stop();
-    m_video_decoder->Stop();
-    m_audio_decoder->Stop();
+    if (m_video_create_ret == 0)
+        m_video_decoder->Stop();
+    if (m_audio_create_ret == 0)
+        m_audio_decoder->Stop();
 }

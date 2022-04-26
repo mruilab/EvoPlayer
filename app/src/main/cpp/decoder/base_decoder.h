@@ -9,6 +9,7 @@
 #include "decode_state.h"
 #include <jni.h>
 #include <thread>
+#include <future>
 #include "logger.h"
 #include "timer.h"
 
@@ -87,9 +88,8 @@ private:
 
     /**
      * 初始化FFMpeg相关参数
-     * @param env
      */
-    void InitFFMpegDecoder(JNIEnv *env);
+    int InitFFMpegDecoder(JNIEnv *env);
 
     /**
      * 分配解码过程中需要的缓存
@@ -99,7 +99,7 @@ private:
     /**
      * 新建解码线程
      */
-    void CreateDecodeThread();
+    int CreateDecodeThread();
 
     /**
      * 循环解码
@@ -121,7 +121,7 @@ private:
      * 静态解码方法，用于解码线程回调
      * @param that 当前解码器
      */
-    static void Decode(std::shared_ptr<BaseDecoder> that);
+    static void Decode(std::shared_ptr<BaseDecoder> that, std::promise<int> &promise);
 
     /**
      * 时间同步
@@ -129,9 +129,11 @@ private:
     void SyncRender();
 
 public:
-    BaseDecoder(JNIEnv *env, jstring path, bool for_synthesizer);
+    BaseDecoder(bool for_synthesizer);
 
     virtual ~BaseDecoder();
+
+    int CreateDecoder(JNIEnv *env, jstring path);
 
     /**
      * 视频宽度

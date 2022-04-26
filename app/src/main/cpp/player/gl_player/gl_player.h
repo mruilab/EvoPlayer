@@ -22,6 +22,9 @@ private:
     AudioDecoder *m_audio_decoder;
     AudioRender *m_audio_render;
 
+    int m_video_create_ret = -1;
+    int m_audio_create_ret = -1;
+
 public:
     GLPlayer(JNIEnv *env, jstring path);
 
