@@ -50,12 +50,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener,
     }
 
     private fun setClickListeners() {
+        findViewById<Button>(R.id.hw_player).setOnClickListener(this)
         findViewById<Button>(R.id.ff_player).setOnClickListener(this)
         findViewById<Button>(R.id.ff_gl_player).setOnClickListener(this)
     }
 
     override fun onClick(view: View) {
         when (view.id) {
+            R.id.hw_player -> {
+                openDocument(HWPlayerActivity::class.java)
+            }
             R.id.ff_player -> {
                 openDocument(FFmpegPlayerActivity::class.java)
             }

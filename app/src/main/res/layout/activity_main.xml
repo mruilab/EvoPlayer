@@ -5,6 +5,13 @@
     android:orientation="vertical">
 
     <Button
+        android:id="@+id/hw_player"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="mediacodec视频播放"
+        android:textAllCaps="false" />
+
+    <Button
         android:id="@+id/ff_player"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
