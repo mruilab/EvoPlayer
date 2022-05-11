@@ -11,14 +11,16 @@ import java.nio.FloatBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
-class GLRender : GLSurfaceView.Renderer {
+class GLRender(context: Context) : GLSurfaceView.Renderer {
 
-    private var mContext: Context
+    private var mContext: Context = context
 
     private var mDisplayWidth: Int = 0
     private var mDisplayHeight: Int = 0
 
     private var mProgram: Int = 0
+    private var hasCreateTextures = false
+    private var mTextureNum: Int = 0
     private lateinit var mTextureIds: IntArray
 
     private var mColorFormat: ColorFormat = ColorFormat.UNKNOWN
@@ -40,8 +42,6 @@ class GLRender : GLSurfaceView.Renderer {
 
     var mVertexMatrixHandler: Int = 0
 
-    private var hasInit = false
-
     private val mDefMatrix: FloatArray = floatArrayOf(
         1.0f, 0.0f, 0.0f, 0.0f,
         0.0f, 0.0f, 0.0f, 0.0f,
@@ -49,11 +49,8 @@ class GLRender : GLSurfaceView.Renderer {
         0.0f, 0.0f, 1.0f, 1.0f
     )
 
-    constructor(context: Context) {
-        mContext = context
-    }
-
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
+        init()
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
@@ -65,20 +62,14 @@ class GLRender : GLSurfaceView.Renderer {
 
     override fun onDrawFrame(gl: GL10?) {
         if (yBuffer == null) return
-        if ((mColorFormat == ColorFormat.I420 ||
-                    mColorFormat == ColorFormat.YV12) &&
+        if ((mColorFormat == ColorFormat.I420 || mColorFormat == ColorFormat.YV12) &&
             (uBuffer == null || vBuffer == null)
         ) return
-        if ((mColorFormat == ColorFormat.NV12 ||
-                    mColorFormat == ColorFormat.NV21 ||
-                    mColorFormat == ColorFormat.NV21_32M) &&
-            uvBuffer == null
+        if ((mColorFormat == ColorFormat.NV12 || mColorFormat == ColorFormat.NV21 ||
+                    mColorFormat == ColorFormat.NV21_32M) && uvBuffer == null
         ) return
 
-        if (!hasInit) {
-            init()
-            hasInit = true
-        }
+        createTextures()
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT) // clear color buffer
         // 1. 选择使用的程序
         GLES30.glUseProgram(mProgram)
@@ -90,9 +81,7 @@ class GLRender : GLSurfaceView.Renderer {
             yuvHeight, 0, GLES30.GL_LUMINANCE, GLES30.GL_UNSIGNED_BYTE, yBuffer
         ) // 赋值
         GLES30.glUniform1i(0, 0) // sampler_y的location=0, 把纹理0赋值给sampler_y
-        if (mColorFormat == ColorFormat.I420 ||
-            mColorFormat == ColorFormat.YV12
-        ) {
+        if (mColorFormat == ColorFormat.I420 || mColorFormat == ColorFormat.YV12) {
             // 2.2 加载纹理u
             GLES30.glActiveTexture(GLES30.GL_TEXTURE1)
             GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, mTextureIds[1])
@@ -119,6 +108,7 @@ class GLRender : GLSurfaceView.Renderer {
             )
             GLES30.glUniform1i(1, 1)
         }
+        GLES30.glUniform1i(3, mColorFormat.ordinal)
         // 3. 加载顶点数据
         mVertexBuffer.position(0)
         GLES30.glVertexAttribPointer(0, 3, GLES30.GL_FLOAT, false, 5 * 4, mVertexBuffer)
@@ -134,39 +124,9 @@ class GLRender : GLSurfaceView.Renderer {
 
     private fun init() {
         val vertexSource = ShaderUtils.loadFromAssets("vertex.vsh", mContext.resources)
-        val fragmentSource =
-            if (mColorFormat == ColorFormat.I420 || mColorFormat == ColorFormat.YV12) {
-                ShaderUtils.loadFromAssets("yuv420p_fragment.fsh", mContext.resources);
-            } else {
-                ShaderUtils.loadFromAssets("yuv420sp_fragment.fsh", mContext.resources);
-            }
+        val fragmentSource = ShaderUtils.loadFromAssets("fragment.fsh", mContext.resources);
         mProgram = ShaderUtils.createProgram(vertexSource, fragmentSource)
-        mVertexMatrixHandler = GLES30.glGetUniformLocation(mProgram, "uMatrix")
-        //创建纹理
-        mTextureIds =
-            if (mColorFormat == ColorFormat.I420 || mColorFormat == ColorFormat.YV12) {
-                IntArray(3)
-            } else {
-                IntArray(2)
-            }
-        GLES30.glGenTextures(mTextureIds.size, mTextureIds, 0)
-        for(textureId in mTextureIds) {
-            //绑定纹理
-            GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, textureId)
-            //设置环绕和过滤方式
-            GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_REPEAT)
-            GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_REPEAT)
-            GLES30.glTexParameteri(
-                GLES30.GL_TEXTURE_2D,
-                GLES30.GL_TEXTURE_MIN_FILTER,
-                GLES30.GL_LINEAR
-            )
-            GLES30.glTexParameteri(
-                GLES30.GL_TEXTURE_2D,
-                GLES30.GL_TEXTURE_MAG_FILTER,
-                GLES30.GL_LINEAR
-            )
-        }
+        mVertexMatrixHandler = GLES30.glGetUniformLocation(mProgram, "u_MVPMatrix")
 
         val vertices = floatArrayOf(
             // 前三个数字为顶点坐标(x, y, z)，后两个数字为纹理坐标(s, t)
@@ -183,6 +143,43 @@ class GLRender : GLSurfaceView.Renderer {
         vbb.order(ByteOrder.nativeOrder()) // 必须要是 native order
         mVertexBuffer = vbb.asFloatBuffer()
         mVertexBuffer.put(vertices)
+    }
+
+    /**
+     * 创建纹理
+     */
+    private fun createTextures() {
+        if (!hasCreateTextures) {
+            //创建纹理
+            mTextureIds = IntArray(mTextureNum)
+            GLES30.glGenTextures(mTextureNum, mTextureIds, 0)
+            for (textureId in mTextureIds) {
+                //绑定纹理
+                GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, textureId)
+                //设置环绕和过滤方式
+                GLES30.glTexParameteri(
+                    GLES30.GL_TEXTURE_2D,
+                    GLES30.GL_TEXTURE_WRAP_S,
+                    GLES30.GL_REPEAT
+                )
+                GLES30.glTexParameteri(
+                    GLES30.GL_TEXTURE_2D,
+                    GLES30.GL_TEXTURE_WRAP_T,
+                    GLES30.GL_REPEAT
+                )
+                GLES30.glTexParameteri(
+                    GLES30.GL_TEXTURE_2D,
+                    GLES30.GL_TEXTURE_MIN_FILTER,
+                    GLES30.GL_LINEAR
+                )
+                GLES30.glTexParameteri(
+                    GLES30.GL_TEXTURE_2D,
+                    GLES30.GL_TEXTURE_MAG_FILTER,
+                    GLES30.GL_LINEAR
+                )
+            }
+            hasCreateTextures = true
+        }
     }
 
     private fun modifyMatrix() {
@@ -202,6 +199,7 @@ class GLRender : GLSurfaceView.Renderer {
         yBuffer = ByteBuffer.wrap(yBytes)
 
         if (mColorFormat == ColorFormat.I420 || mColorFormat == ColorFormat.YV12) {
+            mTextureNum = 3
             if (uBytes == null) uBytes = ByteArray(width * height / 4)
             System.arraycopy(yuv, yBytes!!.size, uBytes, 0, uBytes!!.size)
             uBuffer = ByteBuffer.wrap(uBytes)
@@ -209,6 +207,7 @@ class GLRender : GLSurfaceView.Renderer {
             System.arraycopy(yuv, yBytes!!.size + uBytes!!.size, vBytes, 0, vBytes!!.size)
             vBuffer = ByteBuffer.wrap(vBytes)
         } else {
+            mTextureNum = 2
             if (uvBytes == null) uvBytes = ByteArray(width * height / 2)
             System.arraycopy(yuv, yBytes!!.size, uvBytes, 0, uvBytes!!.size)
             uvBuffer = ByteBuffer.wrap(uvBytes)

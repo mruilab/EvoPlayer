@@ -9,10 +9,10 @@ import com.mruilab.evoplayer.utils.ImageUtils
 import java.nio.ByteBuffer
 
 class VideoDecoder {
-    private val TAG = VideoDecoder::class.java.simpleName
 
     companion object {
-        const val DECODER_COLOR_FORMAT = MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible
+        const val TAG = "VideoDecoder"
+        const val DECODER_COLOR_FORMAT = MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar
         const val DEFAULT_TIMEOUT_US: Long = 10000
     }
 
@@ -74,6 +74,7 @@ class VideoDecoder {
 
         var sampleSize: Int
         var startMs = System.currentTimeMillis()
+        var cropTime: Long
 
         while (!mStop && !outputEOS) {
             if (!inputEOS) {
@@ -114,7 +115,9 @@ class VideoDecoder {
                         val sliceHeight = format.getInteger(MediaFormat.KEY_SLICE_HEIGHT)
                         val colorFormat =
                             getColorFormat(format.getInteger(MediaFormat.KEY_COLOR_FORMAT))
+                        cropTime = System.currentTimeMillis()
                         ImageUtils.cropYUV(outputBuffer, mYuv!!, stride, sliceHeight, width, height)
+                        Log.i(TAG, "crop yuv time:${System.currentTimeMillis() - cropTime}")
                         decodeCallback?.onDecode(
                             mYuv!!, width, height, colorFormat, outputFrameCount,
                             info.presentationTimeUs
@@ -142,6 +145,13 @@ class VideoDecoder {
         return false
     }
 
+    /**
+     * COLOR_FormatYUV420Planar = i420 = 19
+     * COLOR_FormatYUV420PackedPlanar = YV12 = 20
+     * COLOR_FormatYUV420SemiPlanar = NV12 = 21
+     * COLOR_FormatYUV420PackedSemiPlanar = NV21 = 39
+     * OMX_QCOM_COLOR_FormatYUV420PackedSemiPlanar32m = NV21_32M = 2141391876（小米）
+     */
     fun getColorFormat(format: Int): ColorFormat {
         return when (format) {
             19 -> ColorFormat.I420

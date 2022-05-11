@@ -1,13 +1,13 @@
 #version 300 es
 
-uniform mat4 uMatrix;
+uniform mat4 u_MVPMatrix;
 
-layout(location = 0) in vec4 v_Position;
-layout(location = 1) in vec2 v_TextureCoord;
+layout(location = 0) in vec4 a_position;
+layout(location = 1) in vec2 a_texCoord;
 
-out vec2 texture_coord;
+out vec2 v_texCoord;
 
 void main() {
-    gl_Position = uMatrix*v_Position;
-    texture_coord = v_TextureCoord;
+    gl_Position = u_MVPMatrix * a_position;
+    v_texCoord = a_texCoord;
 }
