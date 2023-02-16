@@ -25,4 +25,9 @@
         android:text="FFmpeg+OpenGL视频播放"
         android:textAllCaps="false" />
 
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/video_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
 </LinearLayout>

@@ -1,95 +1,89 @@
 package com.mruilab.evoplayer
 
 import android.Manifest
-import android.app.Activity
-import android.content.Context
 import android.content.Intent
-import android.media.MediaMetadataRetriever
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
-import android.widget.Toast
-import androidx.activity.result.ActivityResult
-import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.appcompat.app.AppCompatActivity
-import com.mruilab.evoplayer.utils.Uri2PathUtils
+import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.mruilab.evoplayer.video.VideoItem
+import com.mruilab.evoplayer.video.VideoListAdapter
+import com.mruilab.evoplayer.video.VideoLoadListener
+import com.mruilab.evoplayer.video.VideoLoader
 import pub.devrel.easypermissions.EasyPermissions
-import java.io.File
 
-class MainActivity : AppCompatActivity(), View.OnClickListener,
-    EasyPermissions.PermissionCallbacks {
+class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
     private var hasStoragePermissions: Boolean = false
 
-    lateinit var mJumpToActivity: Class<*>
-
-    private val mLauncher =
-        registerForActivityResult(StartActivityForResult()) { result: ActivityResult ->
-            if (result.resultCode != Activity.RESULT_OK || result.data == null) {
-                return@registerForActivityResult
-            }
-            val uri = result.data!!.data ?: return@registerForActivityResult
-            val videoPath = Uri2PathUtils.getRealPathFromUri(this, uri)
-            if (!checkIsVideo(this, videoPath)) {
-                Toast.makeText(this, "请选择正确的视频文件", Toast.LENGTH_SHORT).show()
-                return@registerForActivityResult
-            }
-            val intent = Intent(this, mJumpToActivity).apply {
-                putExtra("video_path", videoPath)
-            }
-            startActivity(intent)
-        }
+    private lateinit var mSelectedVideoItem: VideoItem
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         checkPermissions()
-        setClickListeners()
+        setListeners()
     }
 
-    private fun setClickListeners() {
-        findViewById<Button>(R.id.hw_player).setOnClickListener(this)
-        findViewById<Button>(R.id.ff_player).setOnClickListener(this)
-        findViewById<Button>(R.id.ff_gl_player).setOnClickListener(this)
+    override fun onResume() {
+        super.onResume()
+        val videoLoader = VideoLoader(this@MainActivity)
+        videoLoader.loadDeviceVideos(object : VideoLoadListener {
+            override fun onVideoLoaded(videoItems: List<VideoItem>) {
+                val videoList: RecyclerView = findViewById(R.id.video_list)
+                videoList.layoutManager = LinearLayoutManager(this@MainActivity)
+                /**
+                 * 设置为不支持数据更改时的动画
+                 *
+                 * fix bug:RecyclerView为选中的Item添加背景色，并移除上次选中Item的背景色时，旧位置会发生闪烁。
+                 * 这是因为RecyclerView默认设置了DefaultItemAnimator动画，所以在调用notifyItemChanged()方
+                 * 法时，会产生动画，发生闪烁现象。
+                 */
+                (videoList.itemAnimator as DefaultItemAnimator).supportsChangeAnimations = false
+                val adapter = VideoListAdapter(this@MainActivity)
+                videoList.adapter = adapter
+                adapter.setData(videoItems)
+
+                adapter.setOnItemClickListener(object : VideoListAdapter.OnItemClickListener {
+                    override fun onItemClick(view: View, position: Int) {
+                        mSelectedVideoItem = videoItems[position]
+                    }
+                })
+            }
+
+            override fun onFailed(e: Exception) {
+                e.printStackTrace()
+            }
+        })
     }
 
-    override fun onClick(view: View) {
-        when (view.id) {
-            R.id.hw_player -> {
-                openDocument(HWPlayerActivity::class.java)
-            }
-            R.id.ff_player -> {
-                openDocument(FFmpegPlayerActivity::class.java)
-            }
-            R.id.ff_gl_player -> {
-                openDocument(FFGLPlayerActivity::class.java)
-            }
+    private fun setListeners() {
+        findViewById<Button>(R.id.hw_player).setOnClickListener {
+            jumpToActivity(HWPlayerActivity::class.java)
+        }
+        findViewById<Button>(R.id.ff_player).setOnClickListener {
+            jumpToActivity(FFmpegPlayerActivity::class.java)
+        }
+        findViewById<Button>(R.id.ff_gl_player).setOnClickListener {
+            jumpToActivity(FFGLPlayerActivity::class.java)
         }
     }
 
-    private fun openDocument(activity: Class<*>) {
-        if (hasStoragePermissions) {
-            mJumpToActivity = activity
-            val docIntent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                addCategory(Intent.CATEGORY_OPENABLE)
-                type = "video/*"
-            }
-            mLauncher.launch(docIntent)
-        } else {
-            checkPermissions()
-        }
+    private fun jumpToActivity(activity: Class<*>) {
+        val intent = Intent(this, activity)
+        intent.putExtra("video_path", mSelectedVideoItem.path)
+        startActivity(intent)
     }
 
     private fun checkPermissions() {
         val perms: Array<String> = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
         if (!EasyPermissions.hasPermissions(this, *perms)) {
             EasyPermissions.requestPermissions(
-                this,
-                "是否允许\"EvoPlayer\"访问您设备上的照片、媒体内容和文件？",
-                1001,
-                *perms
+                this, "是否允许\"EvoPlayer\"访问您设备上的照片、媒体内容和文件？", 1001, *perms
             )
         } else {
             hasStoragePermissions = true
@@ -97,38 +91,17 @@ class MainActivity : AppCompatActivity(), View.OnClickListener,
     }
 
     override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
+        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this)
     }
 
     override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>) {
-        if (requestCode == 1001)
-            hasStoragePermissions = true
+        if (requestCode == 1001) hasStoragePermissions = true
     }
 
     override fun onPermissionsDenied(requestCode: Int, perms: MutableList<String>) {
-    }
-
-    /**
-     * 校验文件是否是视频
-     *
-     * @param path String
-     * @return Boolean
-     */
-    private fun checkIsVideo(context: Context, path: String): Boolean {
-        val retriever = MediaMetadataRetriever()
-        try {
-            retriever.setDataSource(context, Uri.fromFile(File(path)))
-            val hasVideo = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO)
-            return "yes" == hasVideo
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return false
     }
 
 }
