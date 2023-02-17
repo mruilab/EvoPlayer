@@ -15,9 +15,7 @@ import com.mruilab.evoplayer.utils.Constants
 class HWPlayerActivity : Activity(), DecodeCallback {
     private val TAG = HWPlayerActivity::class.java.simpleName
 
-    private var mVideoPath = Constants.DEFAULT_VIDEO_PATH
-
-    lateinit var mGlSurfaceView: GLSurfaceView
+    private lateinit var mGlSurfaceView: GLSurfaceView
 
     private lateinit var mVideoDecoder: VideoDecoder
     private lateinit var mRender: GLRender
@@ -26,11 +24,6 @@ class HWPlayerActivity : Activity(), DecodeCallback {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_gl_surface)
-
-        var videoPath = intent.getStringExtra("video_path")
-        if (videoPath != null && videoPath.isNotEmpty()) {
-            mVideoPath = videoPath
-        }
 
         mVideoDecoder = VideoDecoder()
 
@@ -42,16 +35,23 @@ class HWPlayerActivity : Activity(), DecodeCallback {
             mGlSurfaceView.renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
         }
 
-        Thread { mVideoDecoder.decode(mVideoPath, this) }.start()
+        val videoPath = intent.getStringExtra(Constants.STRING_EXTRA_VIDEO_PATH)
+        if (videoPath != null && videoPath.isNotEmpty()) {
+            Thread { mVideoDecoder.decode(videoPath, this) }.start()
+        }
     }
 
     override fun onDecode(
-        yuv: ByteArray, width: Int, height: Int, colorFormat: ColorFormat,
-        frameId: Int, presentationTimeUs: Long
+        yuv: ByteArray,
+        width: Int,
+        height: Int,
+        colorFormat: ColorFormat,
+        frameId: Int,
+        presentationTimeUs: Long
     ) {
         Log.d(
-            TAG, "width：$width,height：$height,format：$colorFormat,frameCount: $frameId, " +
-                    "presentationTimeUs: $presentationTimeUs"
+            TAG,
+            "width：$width,height：$height,format：$colorFormat,frameCount: $frameId, presentationTimeUs: $presentationTimeUs"
         )
         mRender.setYUVData(yuv, width, height, colorFormat)
         mGlSurfaceView.requestRender()

@@ -9,10 +9,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.mruilab.evoplayer.video.VideoItem
-import com.mruilab.evoplayer.video.VideoListAdapter
-import com.mruilab.evoplayer.video.VideoLoadListener
-import com.mruilab.evoplayer.video.VideoLoader
+import com.mruilab.evoplayer.loader.VideoItem
+import com.mruilab.evoplayer.loader.VideoListAdapter
+import com.mruilab.evoplayer.loader.VideoLoadListener
+import com.mruilab.evoplayer.loader.VideoLoader
 import pub.devrel.easypermissions.EasyPermissions
 
 class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
@@ -27,10 +27,25 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
         checkPermissions()
         setListeners()
+        loadVideos()
     }
 
-    override fun onResume() {
-        super.onResume()
+    private fun setListeners() {
+        findViewById<Button>(R.id.hw_player).setOnClickListener {
+            jumpToPlayerActivity(HWPlayerActivity::class.java)
+        }
+        findViewById<Button>(R.id.ff_player).setOnClickListener {
+            jumpToPlayerActivity(FFmpegPlayerActivity::class.java)
+        }
+        findViewById<Button>(R.id.ff_gl_player).setOnClickListener {
+            jumpToPlayerActivity(FFGLPlayerActivity::class.java)
+        }
+    }
+
+    /**
+     * 加载视频列表
+     */
+    private fun loadVideos() {
         val videoLoader = VideoLoader(this@MainActivity)
         videoLoader.loadDeviceVideos(object : VideoLoadListener {
             override fun onVideoLoaded(videoItems: List<VideoItem>) {
@@ -62,19 +77,10 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         })
     }
 
-    private fun setListeners() {
-        findViewById<Button>(R.id.hw_player).setOnClickListener {
-            jumpToActivity(HWPlayerActivity::class.java)
-        }
-        findViewById<Button>(R.id.ff_player).setOnClickListener {
-            jumpToActivity(FFmpegPlayerActivity::class.java)
-        }
-        findViewById<Button>(R.id.ff_gl_player).setOnClickListener {
-            jumpToActivity(FFGLPlayerActivity::class.java)
-        }
-    }
-
-    private fun jumpToActivity(activity: Class<*>) {
+    /**
+     * 跳转到播放页
+     */
+    private fun jumpToPlayerActivity(activity: Class<*>) {
         val intent = Intent(this, activity)
         intent.putExtra("video_path", mSelectedVideoItem.path)
         startActivity(intent)

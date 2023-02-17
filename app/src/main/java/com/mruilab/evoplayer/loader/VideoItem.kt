@@ -1,4 +1,4 @@
-package com.mruilab.evoplayer.video
+package com.mruilab.evoplayer.loader
 
 import android.os.Parcel
 import android.os.Parcelable

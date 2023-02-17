@@ -8,7 +8,7 @@ import com.mruilab.evoplayer.utils.Constants
 
 class FFmpegPlayerActivity : Activity(), SurfaceHolder.Callback {
 
-    private var mVideoPath = Constants.DEFAULT_VIDEO_PATH
+    private var mVideoPath: String? = null
 
     private lateinit var mPlayer: EvoPlayer
     private lateinit var mSurfaceView: SurfaceView
@@ -18,7 +18,7 @@ class FFmpegPlayerActivity : Activity(), SurfaceHolder.Callback {
 
         setContentView(R.layout.activity_surface)
 
-        var videoPath = intent.getStringExtra("video_path")
+        val videoPath = intent.getStringExtra(Constants.STRING_EXTRA_VIDEO_PATH)
         if (videoPath != null && videoPath.isNotEmpty()) {
             mVideoPath = videoPath
         }
@@ -30,9 +30,11 @@ class FFmpegPlayerActivity : Activity(), SurfaceHolder.Callback {
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
-        Thread {
-            mPlayer.playVideo(mVideoPath, mSurfaceView.holder.surface)
-        }.start()
+        if (null != mVideoPath && mVideoPath!!.isNotEmpty()) {
+            Thread {
+                mPlayer.playVideo(mVideoPath!!, mSurfaceView.holder.surface)
+            }.start()
+        }
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {

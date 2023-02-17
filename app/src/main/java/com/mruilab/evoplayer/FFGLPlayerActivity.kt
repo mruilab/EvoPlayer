@@ -10,7 +10,7 @@ import com.mruilab.evoplayer.utils.Constants
 class FFGLPlayerActivity : Activity(), SurfaceHolder.Callback {
     private val TAG = FFGLPlayerActivity::class.java.simpleName
 
-    private var mVideoPath = Constants.DEFAULT_VIDEO_PATH
+    private var mVideoPath: String? = null
 
     private lateinit var mPlayer: EvoPlayer
     private var mPlayerID: Long? = null
@@ -20,7 +20,7 @@ class FFGLPlayerActivity : Activity(), SurfaceHolder.Callback {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_surface)
-        var videoPath = intent.getStringExtra("video_path")
+        val videoPath = intent.getStringExtra(Constants.STRING_EXTRA_VIDEO_PATH)
         if (videoPath != null && videoPath.isNotEmpty()) {
             mVideoPath = videoPath
         }
@@ -31,8 +31,8 @@ class FFGLPlayerActivity : Activity(), SurfaceHolder.Callback {
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
-        if (mPlayerID == null) {
-            mPlayerID = mPlayer.createGLPlayer(mVideoPath, holder.surface)
+        if (mPlayerID == null && null != mVideoPath && mVideoPath!!.isNotEmpty()) {
+            mPlayerID = mPlayer.createGLPlayer(mVideoPath!!, holder.surface)
             mPlayer.playOrPause(mPlayerID!!)
         }
     }
