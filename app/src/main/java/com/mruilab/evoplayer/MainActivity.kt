@@ -34,6 +34,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
         val videoLoader = VideoLoader(this@MainActivity)
         videoLoader.loadDeviceVideos(object : VideoLoadListener {
             override fun onVideoLoaded(videoItems: List<VideoItem>) {
+                mSelectedVideoItem = videoItems[0]
                 val videoList: RecyclerView = findViewById(R.id.video_list)
                 videoList.layoutManager = LinearLayoutManager(this@MainActivity)
                 /**
