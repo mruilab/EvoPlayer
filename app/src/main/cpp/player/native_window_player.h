@@ -7,7 +7,6 @@
 
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
-#include "time_util.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -18,9 +17,12 @@ extern "C" {
 }
 
 class NativeWindowPlayer {
+    const char *TAG = "NativeWindowPlayer";
 
 public:
     void playVideo(const char *input_str, ANativeWindow *nativeWindow);
+
+    void renderFrame();
 
 private:
     //封装格式上下文
@@ -44,10 +46,8 @@ private:
     uint8_t *m_FrameBuffer = nullptr;
     ANativeWindow *m_NativeWindow;
     ANativeWindow_Buffer m_NativeWindowBuffer;
-    TimeUtil timeUtil;
     // 开始解码的时间戳，用于计算解码耗时
-    long startDecodeTime;
-
+    int64_t startDecodeTime;
 
 };
 

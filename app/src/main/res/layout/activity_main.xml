@@ -5,21 +5,29 @@
     android:orientation="vertical">
 
     <Button
+        android:id="@+id/hw_player"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:onClick="onPlayClick"
-        android:text="开始播放" />
+        android:text="mediacodec视频播放"
+        android:textAllCaps="false" />
 
-    <SurfaceView
-        android:id="@+id/surface_view"
-        android:layout_width="match_parent"
-        android:layout_height="240dp" />
-
-    <TextView
-        android:id="@+id/ffmpeg_version_text"
+    <Button
+        android:id="@+id/ff_player"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="3dp"
-        android:scrollbars="vertical" />
+        android:text="FFmpeg视频播放"
+        android:textAllCaps="false" />
+
+    <Button
+        android:id="@+id/ff_gl_player"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="FFmpeg+OpenGL视频播放"
+        android:textAllCaps="false" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/video_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
 </LinearLayout>
